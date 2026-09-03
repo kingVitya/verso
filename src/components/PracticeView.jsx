@@ -130,7 +130,24 @@ export default function PracticeView({ text, onBack }) {
 
       {/* Fixed Bottom Slider */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-t border-zinc-200/70 dark:border-zinc-800 p-4 pb-12 md:p-6 z-20">
-        <div className="max-w-2xl mx-auto flex flex-col md:flex-row items-center gap-4">
+        <div className="max-w-2xl mx-auto flex flex-col gap-3">
+          <div className="flex justify-between items-center px-1">
+            <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Скрыто</span>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setSliderValue(prev => Math.max(0, prev - 5))}
+                className="px-3 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg text-sm font-medium transition-colors active:scale-95"
+              >
+                -5%
+              </button>
+              <button 
+                onClick={() => setSliderValue(prev => Math.min(100, prev + 5))}
+                className="px-3 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg text-sm font-medium transition-colors active:scale-95"
+              >
+                +5%
+              </button>
+            </div>
+          </div>
           <div className="flex items-center gap-4 w-full">
             <input
               type="range"
