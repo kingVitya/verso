@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #aa3bff;
+  --color-bg-dark: #16171d;
+}
+
+body {
+  @apply bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-gray-100;
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Ensure textarea doesn't outline weirdly */
+textarea:focus {
+  outline: none;
+}
