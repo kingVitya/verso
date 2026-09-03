@@ -129,7 +129,7 @@ export default function PracticeView({ text, onBack }) {
       </div>
 
       {/* Fixed Bottom Slider */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-t border-gray-200 dark:border-zinc-800 p-4 md:p-6 z-20">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-t border-gray-200 dark:border-zinc-800 p-4 pb-12 md:p-6 md:pb-8 z-20">
         <div className="max-w-2xl mx-auto flex items-center gap-4">
           <span className="text-sm font-bold w-10 text-right text-purple-600 dark:text-purple-400">
             {sliderValue}%
