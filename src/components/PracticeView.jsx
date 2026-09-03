@@ -48,10 +48,10 @@ export default function PracticeView({ text, onBack }) {
 
   return (
     <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      
+
       {/* Top Bar: Back & Toggle */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <button 
+        <button
           onClick={onBack}
           className="flex items-center gap-2 self-start md:self-auto text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors py-2"
         >
@@ -65,8 +65,8 @@ export default function PracticeView({ text, onBack }) {
             onClick={() => setMode('eraser')}
             className={clsx(
               "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm transition-all",
-              mode === 'eraser' 
-                ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white font-medium" 
+              mode === 'eraser'
+                ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white font-medium"
                 : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
             )}
           >
@@ -77,8 +77,8 @@ export default function PracticeView({ text, onBack }) {
             onClick={() => setMode('first-letters')}
             className={clsx(
               "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm transition-all",
-              mode === 'first-letters' 
-                ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white font-medium" 
+              mode === 'first-letters'
+                ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white font-medium"
                 : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
             )}
           >
@@ -121,21 +121,21 @@ export default function PracticeView({ text, onBack }) {
 
       {/* Main Text Area */}
       <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 md:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-sm min-h-[40vh] font-serif leading-relaxed">
-        <MemorizeText 
-          text={displayedText} 
-          mode={mode} 
-          sliderValue={sliderValue} 
+        <MemorizeText
+          text={displayedText}
+          mode={mode}
+          sliderValue={sliderValue}
         />
       </div>
 
       {/* Fixed Bottom Slider */}
-      <div className="sticky bottom-0 left-0 right-0 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-t border-zinc-200/70 dark:border-zinc-800 p-4 pb-10 md:p-6 md:pb-8 z-20 -mx-4 px-8 md:mx-0 md:px-6">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-t border-zinc-200/70 dark:border-zinc-800 p-4 pb-12 md:p-6 z-20">
         <div className="max-w-2xl mx-auto flex flex-col md:flex-row items-center gap-4">
           <div className="flex items-center gap-4 w-full">
-            <input 
-              type="range" 
-              min="0" 
-              max="100" 
+            <input
+              type="range"
+              min="0"
+              max="100"
               value={sliderValue}
               onChange={(e) => setSliderValue(Number(e.target.value))}
               className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-zinc-100 transition-all"
