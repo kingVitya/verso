@@ -95,7 +95,7 @@ export default function InputView({ initialText = '', initialTitle = '', onSave,
       {onCancel && (
         <button 
           onClick={onCancel}
-          className="text-gray-500 hover:text-gray-900 dark:hover:text-white self-start font-medium -mb-2"
+          className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white self-start font-medium -mb-2 transition-colors"
         >
           ← Назад
         </button>
@@ -115,8 +115,10 @@ export default function InputView({ initialText = '', initialTitle = '', onSave,
           onClick={() => fileInputRef.current?.click()}
           disabled={loading}
           className={clsx(
-            "flex items-center justify-center gap-3 w-full py-4 px-6 rounded-2xl font-medium text-lg text-white transition-all active:scale-[0.98]",
-            loading ? "bg-purple-400 cursor-not-allowed" : "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-500/25"
+            "flex items-center justify-center gap-3 w-full py-4 px-6 rounded-2xl font-medium text-[15px] transition-all active:scale-[0.98]",
+            loading 
+              ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed" 
+              : "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm"
           )}
         >
           {loading ? (
@@ -135,27 +137,27 @@ export default function InputView({ initialText = '', initialTitle = '', onSave,
 
       <div className="flex flex-col gap-4 relative">
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
+          <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400 ml-1">
             Название (необязательно)
           </label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Например: Пушкин - Зимнее утро"
-            className="w-full p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all text-base font-medium"
+            className="w-full p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 focus:border-zinc-900 dark:focus:border-zinc-100 focus:ring-4 focus:ring-zinc-900/5 dark:focus:ring-zinc-100/5 transition-all text-base font-medium placeholder:text-zinc-400"
             disabled={loading}
           />
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
+          <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400 ml-1">
             Текст для заучивания
           </label>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Вставьте текст стихотворения сюда, или сфотографируйте его..."
-            className="w-full h-[40vh] min-h-[250px] p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 resize-none shadow-sm transition-all text-base leading-relaxed"
+            className="w-full h-[40vh] min-h-[250px] p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 focus:border-zinc-900 dark:focus:border-zinc-100 focus:ring-4 focus:ring-zinc-900/5 dark:focus:ring-zinc-100/5 resize-none shadow-sm transition-all text-base leading-relaxed font-serif placeholder:font-sans placeholder:text-zinc-400"
             disabled={loading}
           />
         </div>
@@ -165,10 +167,10 @@ export default function InputView({ initialText = '', initialTitle = '', onSave,
         onClick={() => onSave({ text, title })}
         disabled={loading || !text.trim()}
         className={clsx(
-          "flex items-center justify-center gap-2 w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all active:scale-[0.98]",
+          "flex items-center justify-center gap-2 w-full py-4 px-6 rounded-2xl font-bold text-[15px] transition-all active:scale-[0.98]",
           !text.trim() || loading
-            ? "bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
-            : "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-900 dark:hover:bg-gray-100 shadow-lg"
+            ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed"
+            : "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm"
         )}
       >
         <Play className="w-5 h-5 fill-current" />

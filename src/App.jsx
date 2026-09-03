@@ -56,9 +56,9 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-gray-100 font-sans selection:bg-purple-300 selection:text-purple-900">
-      <header className="px-4 py-4 md:py-6 text-center border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 sticky top-0 z-10 shadow-sm cursor-pointer" onClick={navigateToLibrary}>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-indigo-600">
+    <div className="min-h-screen font-sans selection:bg-zinc-200 selection:text-zinc-900 dark:selection:bg-zinc-800 dark:selection:text-white">
+      <header className="px-4 py-4 md:py-6 text-center bg-white dark:bg-zinc-900 sticky top-0 z-10 cursor-pointer" onClick={navigateToLibrary}>
+        <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
           Verso
         </h1>
       </header>
