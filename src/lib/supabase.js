@@ -1,5 +1,8 @@
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+const SUPABASE_URL = 
+  import.meta.env.VITE_SUPABASE_URL || 'https://anbreuuaiooicttifajh.supabase.co'
+
+const SUPABASE_ANON_KEY = 
+  import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuYnJldXVhaW9vaWN0dGlmYWpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3OTQ5NjksImV4cCI6MjEwNDM3MDk2OX0.9D29b7uO25_xGkPHTt73zHTo_9fqd8_rSK8AiaCMZMc'
 
 export function generateShortId(length = 8) {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
