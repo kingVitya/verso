@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { 
   Sun, 
   Moon, 
@@ -11,7 +11,11 @@ import {
   Sliders, 
   Palette, 
   Clock, 
-  Hand
+  Hand,
+  Download,
+  Upload,
+  Database,
+  AlertCircle
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -22,9 +26,57 @@ export default function ProfileView({
   sliderStep = 5,
   setSliderStep = () => {},
   revealDuration = 5,
-  setRevealDuration = () => {}
+  setRevealDuration = () => {},
+  onExport = () => {},
+  onImport = () => {}
 }) {
   const [isThemeOpen, setIsThemeOpen] = useState(false)
+  const [backupMessage, setBackupMessage] = useState(null)
+  const fileInputRef = useRef(null)
+
+  const handleExport = () => {
+    setBackupMessage(null)
+    const ok = onExport()
+    if (!ok) {
+      setBackupMessage({ type: 'info', text: 'В библиотеке пока нет стихов для экспорта' })
+      setTimeout(() => setBackupMessage(null), 3000)
+    } else {
+      setBackupMessage({ type: 'success', text: 'Файл резервной копии скачан!' })
+      setTimeout(() => setBackupMessage(null), 3000)
+    }
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const content = event.target.result
+        const result = onImport(content)
+        setBackupMessage({
+          type: 'success',
+          text: `Импортировано: ${result.importedCount} стихов (пропущено дубликатов: ${result.skippedCount})`
+        })
+      } catch (err) {
+        setBackupMessage({
+          type: 'error',
+          text: err.message || 'Ошибка при импорте файла'
+        })
+      } finally {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+        setTimeout(() => setBackupMessage(null), 5000)
+      }
+    }
+    reader.onerror = () => {
+      setBackupMessage({ type: 'error', text: 'Не удалось прочитать файл' })
+      setTimeout(() => setBackupMessage(null), 5000)
+    }
+    reader.readAsText(file)
+  }
 
   const themeOptions = [
     {
@@ -355,6 +407,67 @@ export default function ProfileView({
         <div className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 font-mono">
           {poemsCount}
         </div>
+      </div>
+
+      {/* Backup & Restore (JSON) Section */}
+      <div className="p-4 sm:p-5 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl sm:rounded-3xl shadow-sm flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+            <Database className="w-4 h-4 sm:w-5 sm:h-5" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              Резервная копия (JSON)
+            </div>
+            <div className="text-xs text-zinc-400 dark:text-zinc-500">
+              Сохраните стихи в файл или восстановите библиотеку
+            </div>
+          </div>
+        </div>
+
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          accept=".json,application/json" 
+          onChange={handleFileChange} 
+          className="hidden" 
+        />
+
+        <div className="grid grid-cols-2 gap-2.5">
+          <button
+            type="button"
+            onClick={handleExport}
+            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-medium text-xs sm:text-sm bg-zinc-100 hover:bg-zinc-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 transition-all active:scale-[0.98] cursor-pointer"
+          >
+            <Download className="w-4 h-4" />
+            <span>Экспорт</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-medium text-xs sm:text-sm bg-zinc-100 hover:bg-zinc-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 transition-all active:scale-[0.98] cursor-pointer"
+          >
+            <Upload className="w-4 h-4" />
+            <span>Импорт</span>
+          </button>
+        </div>
+
+        {backupMessage && (
+          <div className={clsx(
+            "p-3 rounded-xl text-xs flex items-center gap-2 animate-in fade-in duration-200",
+            backupMessage.type === 'success' && "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40",
+            backupMessage.type === 'error' && "bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-800/40",
+            backupMessage.type === 'info' && "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700"
+          )}>
+            {backupMessage.type === 'error' ? (
+              <AlertCircle className="w-4 h-4 shrink-0" />
+            ) : (
+              <Check className="w-4 h-4 shrink-0" />
+            )}
+            <span>{backupMessage.text}</span>
+          </div>
+        )}
       </div>
 
       {/* Tips / Info Section */}

@@ -63,13 +63,27 @@ export async function parseAndFetchPoem(input) {
     throw new Error(`Стих с кодом «${shortId}» не найден в базе данных. Проверьте правильность ссылки.`)
   }
 
-  // 4. Decompress from LZString if legacy share
+  // 4. Decompress from LZString fallback (supports both JSON {title, text} and legacy plain text)
   if (compressedData) {
     try {
-      const text = LZString.decompressFromEncodedURIComponent(compressedData)
-      if (text) {
+      const decompressed = LZString.decompressFromEncodedURIComponent(compressedData)
+      if (decompressed) {
+        // Try parsing as new JSON format
+        try {
+          const parsed = JSON.parse(decompressed)
+          if (parsed && typeof parsed.text === 'string') {
+            return {
+              text: parsed.text,
+              title: parsed.title || '',
+              source: 'compressed',
+            }
+          }
+        } catch {
+          // Backward compatibility: old format was a raw text string
+        }
+
         return {
-          text,
+          text: decompressed,
           title: '',
           source: 'compressed',
         }

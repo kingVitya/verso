@@ -22,8 +22,12 @@ export default function LibraryView({ poems, onOpen, onAdd, onEdit, onDelete }) 
       shareUrl = `${window.location.origin}${window.location.pathname}?p=${shortId}`
     } catch (err) {
       console.warn('Supabase share error, falling back to local compression:', err)
-      // Fallback: local compression
-      const compressed = LZString.compressToEncodedURIComponent(poem.text)
+      // Fallback: local compression with both title and text
+      const payload = JSON.stringify({
+        title: poem.title || '',
+        text: poem.text
+      })
+      const compressed = LZString.compressToEncodedURIComponent(payload)
       shareUrl = `${window.location.origin}${window.location.pathname}?share=${compressed}`
     }
 

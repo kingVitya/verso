@@ -1,25 +1,9 @@
 import { useMemo, useEffect, useState, useRef } from 'react'
 import clsx from 'clsx'
-
-// Match words (Russian and English letters) and non-words (punctuation, spaces, newlines)
-const TOKENIZER_REGEX = /([а-яА-ЯёЁa-zA-Z]+)|([^а-яА-ЯёЁa-zA-Z]+)/g
-
-function shuffle(array) {
-  let currentIndex = array.length,  randomIndex;
-
-  // While there remain elements to shuffle.
-  while (currentIndex > 0) {
-    // Pick a remaining element.
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-
-    // And swap it with the current element.
-    [array[currentIndex], array[randomIndex]] = [
-      array[randomIndex], array[currentIndex]];
-  }
-
-  return array;
-}
+import { tokenizeText, getWordIndices } from '../lib/memorization/tokenizer'
+import { shuffleArray } from '../lib/memorization/shuffle'
+import { getHiddenWordIndices } from '../lib/memorization/hideWords'
+import { calculateWordVisibility } from '../lib/memorization/firstLetters'
 
 export default function MemorizeText({ text, mode, sliderValue, revealDuration = 5 }) {
   // We need deterministic shuffling per text chunk for the eraser mode
@@ -29,39 +13,22 @@ export default function MemorizeText({ text, mode, sliderValue, revealDuration =
   const timeoutsRef = useRef(new Map())
   
   const tokens = useMemo(() => {
-    if (!text) return []
-    const result = []
-    let match
-    
-    // Reset lastIndex just in case
-    TOKENIZER_REGEX.lastIndex = 0
-    
-    while ((match = TOKENIZER_REGEX.exec(text)) !== null) {
-      if (match[1]) {
-        result.push({ type: 'word', value: match[1] })
-      } else if (match[2]) {
-        result.push({ type: 'non-word', value: match[2] })
-      }
-    }
-    return result
+    return tokenizeText(text)
   }, [text])
 
   // Get total number of words and generate a shuffled list of their indices
   useEffect(() => {
-    const wordIndices = tokens
-      .map((t, i) => t.type === 'word' ? i : -1)
-      .filter(i => i !== -1)
-    
-    setShuffledWordIndices(shuffle([...wordIndices]))
+    const wordIndices = getWordIndices(tokens)
+    setShuffledWordIndices(shuffleArray(wordIndices))
     setRevealedIndices(new Set())
-    timeoutsRef.current.forEach(timer => clearTimeout(timer))
+    timeoutsRef.current.forEach((timer) => clearTimeout(timer))
     timeoutsRef.current.clear()
   }, [tokens])
 
   // Reset revealed words and clear timers when mode changes
   useEffect(() => {
     setRevealedIndices(new Set())
-    timeoutsRef.current.forEach(timer => clearTimeout(timer))
+    timeoutsRef.current.forEach((timer) => clearTimeout(timer))
     timeoutsRef.current.clear()
   }, [mode])
 
@@ -69,7 +36,7 @@ export default function MemorizeText({ text, mode, sliderValue, revealDuration =
   useEffect(() => {
     const timeouts = timeoutsRef.current
     return () => {
-      timeouts.forEach(timer => clearTimeout(timer))
+      timeouts.forEach((timer) => clearTimeout(timer))
       timeouts.clear()
     }
   }, [])
@@ -113,15 +80,11 @@ export default function MemorizeText({ text, mode, sliderValue, revealDuration =
 
   const renderTokens = () => {
     if (shuffledWordIndices.length === 0 && tokens.length > 0) {
-        // Fallback before shuffle happens
-        return tokens.map((t, i) => <span key={i}>{t.value}</span>)
+      // Fallback before shuffle happens
+      return tokens.map((t, i) => <span key={i}>{t.value}</span>)
     }
 
-    const totalWords = shuffledWordIndices.length
-    // Number of words to hide based on slider (0 to totalWords)
-    const wordsToHideCount = Math.floor((sliderValue / 100) * totalWords)
-    // The indices of the words that should be hidden
-    const hiddenIndices = new Set(shuffledWordIndices.slice(0, wordsToHideCount))
+    const hiddenIndices = getHiddenWordIndices(shuffledWordIndices, sliderValue)
 
     return tokens.map((token, index) => {
       if (token.type === 'non-word') {
@@ -220,21 +183,7 @@ export default function MemorizeText({ text, mode, sliderValue, revealDuration =
           )
         }
 
-        let visibleLength = word.length
-        
-        if (word.length <= 2) {
-          if (sliderValue === 100) {
-            visibleLength = 1
-          } else {
-            visibleLength = word.length
-          }
-        } else {
-          const factor = 1 - (sliderValue / 100)
-          visibleLength = Math.max(1, Math.round(1 + (word.length - 1) * factor))
-        }
-
-        const visiblePart = word.substring(0, visibleLength)
-        const hiddenPart = word.substring(visibleLength)
+        const { visiblePart, hiddenPart } = calculateWordVisibility(word, sliderValue)
 
         return (
           <span
@@ -251,7 +200,7 @@ export default function MemorizeText({ text, mode, sliderValue, revealDuration =
             className={clsx(
               hiddenPart.length > 0 && "cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800/80 rounded px-0.5 transition-colors"
             )}
-            title={hiddenPart.length > 0 ? "Нажмите, чтобы подсмотреть на 5 секунд" : undefined}
+            title={hiddenPart.length > 0 ? "Нажмите, чтобы подсмотреть на время" : undefined}
           >
             {visiblePart}
             {hiddenPart.length > 0 && (

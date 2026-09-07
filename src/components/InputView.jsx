@@ -3,6 +3,7 @@ import { createWorker } from 'tesseract.js'
 import { Camera, Loader2, Play, Link2, Download, Check, AlertCircle } from 'lucide-react'
 import clsx from 'clsx'
 import { parseAndFetchPoem } from '../lib/shareParser'
+import { MAX_TITLE_LENGTH, MAX_TEXT_LENGTH } from '../hooks/useLibrary'
 
 const preprocessImage = (file) => {
   return new Promise((resolve, reject) => {
@@ -75,11 +76,13 @@ export default function InputView({ initialText = '', initialTitle = '', onSave,
 
     try {
       const data = await parseAndFetchPoem(linkInput)
-      setText(data.text)
-      if (data.title) {
-        setTitle(data.title)
+      const cleanText = (data.text || '').slice(0, MAX_TEXT_LENGTH)
+      const cleanTitle = (data.title || '').slice(0, MAX_TITLE_LENGTH)
+      setText(cleanText)
+      if (cleanTitle) {
+        setTitle(cleanTitle)
       }
-      setLinkSuccess(`Стих ${data.title ? `«${data.title}» ` : ''}успешно загружен!`)
+      setLinkSuccess(`Стих ${cleanTitle ? `«${cleanTitle}» ` : ''}успешно загружен!`)
       setLinkInput('')
     } catch (err) {
       setLinkError(err.message || 'Не удалось загрузить стих по этой ссылке')
@@ -93,10 +96,11 @@ export default function InputView({ initialText = '', initialTitle = '', onSave,
     if (!file) return
 
     setLoading(true)
+    let worker = null
     try {
       const processedImage = await preprocessImage(file)
       
-      const worker = await createWorker('rus', 1, {
+      worker = await createWorker('rus', 1, {
         langPath: 'https://tessdata.projectnaptha.com/4.0.0_best',
         logger: (m) => console.log(m)
       })
@@ -106,12 +110,22 @@ export default function InputView({ initialText = '', initialTitle = '', onSave,
       })
 
       const { data } = await worker.recognize(processedImage)
-      setText(prev => prev ? prev + '\n\n' + data.text : data.text)
-      await worker.terminate()
+      const recognized = data.text ? data.text.trim() : ''
+      setText(prev => {
+        const combined = prev ? prev + '\n\n' + recognized : recognized
+        return combined.slice(0, MAX_TEXT_LENGTH)
+      })
     } catch (error) {
       console.error(error)
       alert('Ошибка при распознавании текста')
     } finally {
+      if (worker) {
+        try {
+          await worker.terminate()
+        } catch (termErr) {
+          console.warn('Worker terminate error', termErr)
+        }
+      }
       setLoading(false)
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
@@ -217,7 +231,7 @@ export default function InputView({ initialText = '', initialTitle = '', onSave,
           ) : (
             <>
               <Camera className="w-5 h-5" />
-              <span>Сфотографировать текст</span>
+              <span>Сфотографировать русский текст</span>
             </>
           )}
         </button>
@@ -225,11 +239,19 @@ export default function InputView({ initialText = '', initialTitle = '', onSave,
 
       <div className="flex flex-col gap-4 relative">
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400 ml-1">
-            Название (необязательно)
-          </label>
+          <div className="flex justify-between items-center ml-1">
+            <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              Название (необязательно)
+            </label>
+            {title.length > 100 && (
+              <span className="text-[11px] text-zinc-400 font-mono">
+                {title.length}/{MAX_TITLE_LENGTH}
+              </span>
+            )}
+          </div>
           <input
             value={title}
+            maxLength={MAX_TITLE_LENGTH}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Например: Пушкин - Зимнее утро"
             className="w-full p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 focus:border-zinc-900 dark:focus:border-zinc-100 focus:ring-4 focus:ring-zinc-900/5 dark:focus:ring-zinc-100/5 transition-all text-base font-medium placeholder:text-zinc-400 dark:text-zinc-100"
@@ -238,11 +260,19 @@ export default function InputView({ initialText = '', initialTitle = '', onSave,
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400 ml-1">
-            Текст для заучивания
-          </label>
+          <div className="flex justify-between items-center ml-1">
+            <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              Текст для заучивания
+            </label>
+            {text.length > 20000 && (
+              <span className="text-[11px] text-zinc-400 font-mono">
+                {text.length}/{MAX_TEXT_LENGTH}
+              </span>
+            )}
+          </div>
           <textarea
             value={text}
+            maxLength={MAX_TEXT_LENGTH}
             onChange={(e) => setText(e.target.value)}
             placeholder="Вставьте текст стихотворения сюда, или загрузите его по ссылке выше..."
             className="w-full h-[40vh] min-h-[250px] p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 focus:border-zinc-900 dark:focus:border-zinc-100 focus:ring-4 focus:ring-zinc-900/5 dark:focus:ring-zinc-100/5 resize-none shadow-sm transition-all text-base leading-relaxed font-serif placeholder:font-sans placeholder:text-zinc-400 dark:text-zinc-100"

@@ -1,11 +1,32 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { ArrowLeft, Eraser, Type } from 'lucide-react'
 import clsx from 'clsx'
 import MemorizeText from './MemorizeText'
 
-export default function PracticeView({ text, onBack, sliderStep = 5, revealDuration = 5 }) {
+export default function PracticeView({ 
+  text, 
+  onBack, 
+  sliderStep = 5, 
+  revealDuration = 5,
+  onCompleteSession = () => {}
+}) {
   const [sliderValue, setSliderValue] = useState(0)
   const [mode, setMode] = useState('eraser') // 'eraser' | 'first-letters'
+  const hasTrainedRef = useRef(false)
+
+  // Track semantic training: reached at least 70% difficulty during session
+  useEffect(() => {
+    if (sliderValue >= 70) {
+      hasTrainedRef.current = true
+    }
+  }, [sliderValue])
+
+  const handleBack = () => {
+    if (hasTrainedRef.current) {
+      onCompleteSession()
+    }
+    onBack()
+  }
 
   // Split into chunks by double newline
   const chunks = useMemo(() => {
@@ -16,6 +37,12 @@ export default function PracticeView({ text, onBack, sliderStep = 5, revealDurat
   }, [text])
 
   const [activeChunkIndices, setActiveChunkIndices] = useState(new Set([0])) // Set of active chunk indices
+
+  // Reset active chunk to the first chunk when poem/text changes, while keeping difficulty level
+  useEffect(() => {
+    setActiveChunkIndices(new Set([0]))
+    hasTrainedRef.current = false
+  }, [text])
 
   const displayedText = useMemo(() => {
     // If all selected, or specific selection, join them in order
@@ -52,8 +79,8 @@ export default function PracticeView({ text, onBack, sliderStep = 5, revealDurat
       {/* Top Bar: Back & Toggle */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         <button
-          onClick={onBack}
-          className="flex items-center gap-2 self-start md:self-auto text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors py-2"
+          onClick={handleBack}
+          className="flex items-center gap-2 self-start md:self-auto text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors py-2 cursor-pointer"
         >
           <ArrowLeft className="w-5 h-5" />
           <span className="font-medium">Назад</span>
@@ -90,13 +117,16 @@ export default function PracticeView({ text, onBack, sliderStep = 5, revealDurat
 
       {/* Parts Navigation */}
       {chunks.length > 1 && (
-        <div className="flex overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 hide-scrollbar gap-2">
+        <div 
+          className="flex overflow-x-auto pb-2 w-full max-w-full hide-scrollbar gap-2 overscroll-x-contain touch-pan-x"
+          style={{ overscrollBehaviorX: 'contain', WebkitOverflowScrolling: 'touch' }}
+        >
           {chunks.map((_, i) => (
             <button
               key={i}
               onClick={() => toggleChunk(i)}
               className={clsx(
-                "whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition-all active:scale-95 border",
+                "whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition-all active:scale-95 border shrink-0",
                 activeChunkIndices.has(i)
                   ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100"
                   : "bg-zinc-100 text-zinc-600 border-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700"
@@ -108,7 +138,7 @@ export default function PracticeView({ text, onBack, sliderStep = 5, revealDurat
           <button
             onClick={selectAllChunks}
             className={clsx(
-              "whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition-all active:scale-95 border ml-2",
+              "whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition-all active:scale-95 border ml-1 shrink-0",
               isAllSelected
                 ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100"
                 : "bg-zinc-100 text-zinc-600 border-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700"
@@ -120,7 +150,7 @@ export default function PracticeView({ text, onBack, sliderStep = 5, revealDurat
       )}
 
       {/* Main Text Area */}
-      <div className="bg-white dark:bg-zinc-900 rounded-3xl p-5 md:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-sm min-h-[40vh] font-serif leading-relaxed mb-44 md:mb-36">
+      <div className="bg-white dark:bg-zinc-900 rounded-3xl p-5 md:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-sm min-h-[40vh] font-serif leading-relaxed mb-48 md:mb-40">
         <MemorizeText
           text={displayedText}
           mode={mode}
@@ -129,8 +159,10 @@ export default function PracticeView({ text, onBack, sliderStep = 5, revealDurat
         />
       </div>
 
-      {/* Fixed Bottom Slider (above bottom navigation tabs with safe-area support) */}
-      <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] left-0 right-0 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200/70 dark:border-zinc-800 p-3 md:p-4 z-20">
+      {/* Fixed Bottom Slider (flush above bottom navigation tabs with safe-area support) */}
+      <div className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] left-0 right-0 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-b border-zinc-200/70 dark:border-zinc-800/80 p-3 md:p-4 z-20 shadow-xs">
+        {/* Underlay extending downwards to prevent any subpixel text bleed between slider and nav bar */}
+        <div className="absolute top-full left-0 right-0 h-6 bg-white dark:bg-zinc-950 -z-10 pointer-events-none" />
         <div className="max-w-2xl mx-auto flex flex-col gap-2.5">
           <div className="flex justify-between items-center px-1">
             <span className="text-xs md:text-sm font-medium text-zinc-600 dark:text-zinc-400">Скрыто</span>
