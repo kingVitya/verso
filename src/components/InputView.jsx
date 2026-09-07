@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { createWorker } from 'tesseract.js'
-import { Camera, Loader2, Play, Link2, Download, Check, AlertCircle } from 'lucide-react'
+import { Camera, Loader2, Play, Link2, Download, Check, AlertCircle, BookOpen } from 'lucide-react'
 import clsx from 'clsx'
 import { parseAndFetchPoem } from '../lib/shareParser'
 import { MAX_TITLE_LENGTH, MAX_TEXT_LENGTH } from '../hooks/useLibrary'
@@ -54,7 +54,7 @@ const preprocessImage = (file) => {
   })
 }
 
-export default function InputView({ initialText = '', initialTitle = '', onSave, onCancel }) {
+export default function InputView({ initialText = '', initialTitle = '', onSave, onCancel, onSelectFromCatalog }) {
   const [text, setText] = useState(initialText)
   const [title, setTitle] = useState(initialTitle)
   const [loading, setLoading] = useState(false)
@@ -202,6 +202,32 @@ export default function InputView({ initialText = '', initialTitle = '', onSave,
           </div>
         )}
       </div>
+
+      {/* Catalog quick-select shortcut */}
+      {onSelectFromCatalog && (
+        <button
+          type="button"
+          onClick={onSelectFromCatalog}
+          className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-850 hover:bg-zinc-100/80 dark:hover:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-800 transition-all cursor-pointer group text-left shadow-xs active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 flex items-center justify-center shrink-0">
+              <BookOpen className="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-700 dark:group-hover:text-zinc-200 transition-colors">
+                Выбрать из каталога
+              </h4>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Пушкин, Лермонтов, Есенин и готовые стихи
+              </p>
+            </div>
+          </div>
+          <span className="text-xs font-semibold text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200 group-hover:translate-x-0.5 transition-all">
+            Открыть →
+          </span>
+        </button>
+      )}
 
       <div className="flex flex-col gap-3">
         <input 

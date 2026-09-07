@@ -45,6 +45,18 @@ export async function sharePoemToSupabase(text, title = '') {
 }
 
 /**
+ * Normalizes poem text by replacing literal escaped \n and \r\n with real newlines.
+ */
+export function normalizePoemText(text) {
+  if (!text) return ''
+  return text
+    .replace(/\\r\\n/g, '\n')
+    .replace(/\\n/g, '\n')
+    .replace(/\r\n/g, '\n')
+    .trim()
+}
+
+/**
  * Fetches a shared poem by short ID using the secure RPC function.
  * Direct table scans are strictly prohibited by RLS for data privacy.
  */
@@ -70,7 +82,11 @@ export async function fetchSharedPoemFromSupabase(id) {
 
     const data = await res.json()
     if (Array.isArray(data) && data.length > 0) {
-      return data[0]
+      const item = data[0]
+      return {
+        ...item,
+        text: normalizePoemText(item.text),
+      }
     }
   } catch (e) {
     console.error('Failed to fetch shared poem', e)
@@ -78,3 +94,42 @@ export async function fetchSharedPoemFromSupabase(id) {
 
   return null
 }
+
+/**
+ * Fetches public poems from the Supabase catalog.
+ */
+export async function fetchCatalogPoems() {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    return []
+  }
+
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/catalog_poems?select=id,title,author,text,tags,created_at&order=author.asc,title.asc`,
+      {
+        method: 'GET',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Accept': 'application/json',
+        },
+      }
+    )
+
+    if (!res.ok) {
+      console.warn('Failed to fetch catalog poems from Supabase:', res.status)
+      return []
+    }
+
+    const data = await res.json()
+    if (!Array.isArray(data)) return []
+    return data.map((poem) => ({
+      ...poem,
+      text: normalizePoemText(poem.text),
+    }))
+  } catch (err) {
+    console.error('Error fetching catalog poems:', err)
+    return []
+  }
+}
+

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import LZString from 'lz-string'
-import { Home, User } from 'lucide-react'
+import { Home, User, BookOpen } from 'lucide-react'
 import clsx from 'clsx'
 import InputView from './components/InputView'
 import PracticeView from './components/PracticeView'
 import LibraryView from './components/LibraryView'
 import ProfileView from './components/ProfileView'
+import CatalogView from './components/CatalogView'
 import { useLibrary } from './hooks/useLibrary'
 import { useTheme } from './hooks/useTheme'
 import { useSettings } from './hooks/useSettings'
@@ -98,6 +99,27 @@ function App() {
             onExport={exportLibrary}
             onImport={importLibrary}
           />
+        ) : activeTab === 'catalog' ? (
+          <CatalogView 
+            userPoems={poems}
+            onPractice={({ title, text }) => {
+              const normalizeSig = (s) => (s || '').toLowerCase().replace(/[^a-zа-яё0-9]/gi, '').slice(0, 80)
+              const targetSig = normalizeSig(text)
+              const existing = poems.find((p) => normalizeSig(p.text) === targetSig)
+
+              if (existing) {
+                setActivePoem(existing)
+              } else {
+                const newId = addPoem(text, title)
+                setActivePoem({ id: newId, text, title })
+              }
+              setRoute('practice')
+              setActiveTab('main')
+            }}
+            onAddToLibrary={({ title, text }) => {
+              addPoem(text, title)
+            }}
+          />
         ) : (
           <>
             {route === 'library' && (
@@ -125,6 +147,7 @@ function App() {
                 initialTitle={activePoem ? activePoem.title : ''}
                 onSave={handleSavePoem}
                 onCancel={navigateToLibrary}
+                onSelectFromCatalog={() => setActiveTab('catalog')}
               />
             )}
 
@@ -141,9 +164,9 @@ function App() {
         )}
       </main>
 
-      {/* Bottom Navigation Tabs: Главная & Профиль with safe-area padding */}
+      {/* Bottom Navigation Tabs: Мои стихи, Каталог, Профиль with safe-area padding */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200/80 dark:border-zinc-800 pb-[env(safe-area-inset-bottom,0px)]">
-        <div className="max-w-md mx-auto h-14 sm:h-16 flex items-center justify-around px-6">
+        <div className="max-w-md mx-auto h-14 sm:h-16 flex items-center justify-around px-4">
           <button
             id="tab-main"
             type="button"
@@ -156,7 +179,22 @@ function App() {
             )}
           >
             <Home className={clsx("w-5 h-5 transition-transform", activeTab === 'main' ? "scale-105" : "opacity-75")} />
-            <span className="text-[11px] sm:text-xs">Главная</span>
+            <span className="text-[11px] sm:text-xs">Мои стихи</span>
+          </button>
+
+          <button
+            id="tab-catalog"
+            type="button"
+            onClick={() => setActiveTab('catalog')}
+            className={clsx(
+              "flex flex-col items-center justify-center gap-0.5 sm:gap-1 flex-1 py-1 rounded-xl transition-all cursor-pointer select-none",
+              activeTab === 'catalog'
+                ? "text-zinc-900 dark:text-zinc-100 font-semibold"
+                : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 font-medium"
+            )}
+          >
+            <BookOpen className={clsx("w-5 h-5 transition-transform", activeTab === 'catalog' ? "scale-105" : "opacity-75")} />
+            <span className="text-[11px] sm:text-xs">Каталог</span>
           </button>
 
           <button
