@@ -1,66 +1,46 @@
 import { useState } from 'react'
-import { Plus, BookOpen, Share2, Trash2, Edit } from 'lucide-react'
+import { Plus, BookOpen, Share2, Trash2, Edit, Loader2, X, Copy, Check } from 'lucide-react'
 import LZString from 'lz-string'
+import { sharePoemToSupabase } from '../lib/supabase'
+import { copyToClipboard } from '../lib/clipboard'
 
 export default function LibraryView({ poems, onOpen, onAdd, onEdit, onDelete }) {
   const [copiedId, setCopiedId] = useState(null)
   const [sharingId, setSharingId] = useState(null)
+  const [shareModal, setShareModal] = useState(null) // { poem, url, copied }
 
   const handleShare = async (e, poem) => {
     e.stopPropagation()
+    if (sharingId) return
     setSharingId(poem.id)
 
-    // Compress poem text
-    const compressed = LZString.compressToEncodedURIComponent(poem.text)
-    let shareUrl = `${window.location.origin}${window.location.pathname}?share=${compressed}`
-    
-    // If hosted on a public domain, auto-shorten with is.gd
-    const isLocalhost = window.location.hostname === 'localhost' || 
-                        window.location.hostname === '127.0.0.1' || 
-                        window.location.hostname.startsWith('192.168.') ||
-                        window.location.hostname.startsWith('10.') ||
-                        window.location.hostname.endsWith('.local')
+    let shareUrl = ''
 
-    if (!isLocalhost) {
-      try {
-        const response = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(shareUrl)}`)
-        const data = await response.json()
-        if (data && data.shorturl) {
-          shareUrl = data.shorturl
-        }
-      } catch (err) {
-        // Fallback to original compressed URL
-      }
-    }
-
-    // Use native mobile share if available (e.g. on iPhone / Android)
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: poem.title || 'Стих в Verso',
-          text: `Стих «${poem.title || 'Без названия'}» для заучивания:`,
-          url: shareUrl
-        })
-        setSharingId(null)
-        return
-      } catch (err) {
-        if (err.name === 'AbortError') {
-          setSharingId(null)
-          return
-        }
-      }
-    }
-
-    // Fallback: Copy to clipboard
+    // 1. Try to create ultra-short link in Supabase
     try {
-      await navigator.clipboard.writeText(shareUrl)
-      setCopiedId(poem.id)
-      setTimeout(() => setCopiedId(null), 2000)
+      const shortId = await sharePoemToSupabase(poem.text, poem.title)
+      shareUrl = `${window.location.origin}${window.location.pathname}?p=${shortId}`
     } catch (err) {
-      console.error('Failed to copy', err)
-    } finally {
-      setSharingId(null)
+      console.warn('Supabase share error, falling back to local compression:', err)
+      // Fallback: local compression
+      const compressed = LZString.compressToEncodedURIComponent(poem.text)
+      shareUrl = `${window.location.origin}${window.location.pathname}?share=${compressed}`
     }
+
+    // 2. Automatically copy to clipboard
+    const wasCopied = await copyToClipboard(shareUrl)
+    if (wasCopied) {
+      setCopiedId(poem.id)
+      setTimeout(() => setCopiedId(null), 2500)
+    }
+
+    // 3. Open share modal so user always sees the link and has direct controls
+    setShareModal({
+      poem,
+      url: shareUrl,
+      copied: wasCopied,
+    })
+    setSharingId(null)
   }
 
   const handleDelete = (e, id) => {
@@ -79,7 +59,7 @@ export default function LibraryView({ poems, onOpen, onAdd, onEdit, onDelete }) 
     <div className="flex flex-col gap-6 animate-in fade-in duration-500">
       <button 
         onClick={onAdd}
-        className="flex items-center justify-center gap-3 w-full py-3.5 px-4 rounded-xl font-medium text-[15px] text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white transition-all active:scale-[0.98]"
+        className="flex items-center justify-center gap-3 w-full py-3.5 px-4 rounded-xl font-medium text-[15px] text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white transition-all active:scale-[0.98] cursor-pointer"
       >
         <Plus className="w-5 h-5" />
         <span>Добавить новый стих</span>
@@ -101,7 +81,7 @@ export default function LibraryView({ poems, onOpen, onAdd, onEdit, onDelete }) 
             >
               <div className="flex justify-between items-start gap-2">
                 <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 line-clamp-2 leading-snug">
-                  {poem.title}
+                  {poem.title || 'Без названия'}
                 </h3>
               </div>
               
@@ -112,26 +92,31 @@ export default function LibraryView({ poems, onOpen, onAdd, onEdit, onDelete }) 
               <div className="mt-auto pt-4 flex items-center justify-end gap-1.5 border-t border-zinc-100 dark:border-zinc-800/50">
                 <button
                   onClick={(e) => handleEdit(e, poem)}
-                  className="p-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+                  className="p-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors cursor-pointer"
                   title="Редактировать"
                 >
                   <Edit className="w-4 h-4" />
                 </button>
                 <button
                   onClick={(e) => handleShare(e, poem)}
-                  className="p-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors relative"
+                  disabled={sharingId === poem.id}
+                  className="p-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors relative cursor-pointer active:scale-90"
                   title="Поделиться"
                 >
-                  <Share2 className="w-4 h-4" />
+                  {sharingId === poem.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-zinc-600 dark:text-zinc-300" />
+                  ) : (
+                    <Share2 className="w-4 h-4" />
+                  )}
                   {copiedId === poem.id && (
-                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-[10px] font-medium px-2 py-1 rounded shadow">
+                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[10px] font-medium px-2.5 py-1 rounded-lg shadow whitespace-nowrap z-10 animate-in fade-in zoom-in-95">
                       Скопировано!
                     </span>
                   )}
                 </button>
                 <button
                   onClick={(e) => handleDelete(e, poem.id)}
-                  className="p-2 text-zinc-400 hover:text-red-500 transition-colors"
+                  className="p-2 text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
                   title="Удалить"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -139,6 +124,100 @@ export default function LibraryView({ poems, onOpen, onAdd, onEdit, onDelete }) 
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Share Modal Dialog */}
+      {shareModal && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200"
+          onClick={() => setShareModal(null)}
+        >
+          <div 
+            className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-t-3xl sm:rounded-2xl w-full max-w-md p-6 flex flex-col gap-4 shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                  Поделиться стихом
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1 mt-0.5">
+                  «{shareModal.poem.title || 'Без названия'}»
+                </p>
+              </div>
+              <button 
+                onClick={() => setShareModal(null)}
+                className="p-1.5 rounded-full text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                Короткая ссылка:
+              </label>
+              <div className="flex gap-2 items-center">
+                <input 
+                  readOnly
+                  value={shareModal.url}
+                  onClick={(e) => e.target.select()}
+                  className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-mono text-zinc-800 dark:text-zinc-200 select-all outline-none"
+                />
+                <button
+                  onClick={async () => {
+                    const ok = await copyToClipboard(shareModal.url)
+                    if (ok) {
+                      setShareModal(prev => ({ ...prev, copied: true }))
+                      setTimeout(() => setShareModal(prev => prev ? { ...prev, copied: false } : null), 2500)
+                    }
+                  }}
+                  className="px-3.5 py-2.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-xl font-medium text-xs hover:bg-zinc-800 dark:hover:bg-white transition-all flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
+                >
+                  {shareModal.copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-500" />
+                      <span className="text-emerald-500 font-semibold">Скопировано!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Копировать</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {typeof navigator !== 'undefined' && navigator.share && (
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.share({
+                      title: shareModal.poem.title || 'Стих в Verso',
+                      text: `Стих «${shareModal.poem.title || 'Без названия'}» для заучивания в Verso:`,
+                      url: shareModal.url,
+                    })
+                  } catch (err) {
+                    if (err.name !== 'AbortError') {
+                      console.warn('Native share failed', err)
+                    }
+                  }
+                }}
+                className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl font-medium text-sm bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200/70 dark:hover:bg-zinc-700/70 text-zinc-800 dark:text-zinc-200 transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <Share2 className="w-4 h-4" />
+                <span>Открыть меню «Поделиться»</span>
+              </button>
+            )}
+
+            <p className="text-[11px] text-zinc-400 dark:text-zinc-500 leading-relaxed text-center">
+              {shareModal.copied 
+                ? 'Ссылка уже скопирована в буфер обмена! Отправьте её друзьям.' 
+                : 'Любой, кто откроет ссылку, сразу получит этот стих в приложении.'}
+            </p>
+          </div>
         </div>
       )}
     </div>

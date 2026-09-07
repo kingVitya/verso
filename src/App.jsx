@@ -9,6 +9,7 @@ import ProfileView from './components/ProfileView'
 import { useLibrary } from './hooks/useLibrary'
 import { useTheme } from './hooks/useTheme'
 import { useSettings } from './hooks/useSettings'
+import { parseAndFetchPoem } from './lib/shareParser'
 
 function App() {
   const { poems, addPoem, updatePoem, deletePoem } = useLibrary()
@@ -24,26 +25,23 @@ function App() {
   // State for Practice & Edit mode
   const [activePoem, setActivePoem] = useState(null)
   
-  // Check for shared poem in URL on mount
+  // Check for shared poem in URL on mount (?p=shortId or ?share=compressed)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const shared = params.get('share')
-    
-    if (shared) {
-      try {
-        const text = LZString.decompressFromEncodedURIComponent(shared)
-        if (text) {
-          const newId = addPoem(text, '')
-          // Clean up URL
-          window.history.replaceState({}, document.title, window.location.pathname)
-          // Open it
-          setActivePoem({ id: newId, text, title: '' })
-          setRoute('practice')
-          setActiveTab('main')
-        }
-      } catch (e) {
-        console.error('Failed to parse shared poem', e)
-      }
+    if (params.get('p') || params.get('share')) {
+      parseAndFetchPoem(window.location.search)
+        .then(({ text, title }) => {
+          if (text) {
+            const newId = addPoem(text, title || '')
+            window.history.replaceState({}, document.title, window.location.pathname)
+            setActivePoem({ id: newId, text, title: title || '' })
+            setRoute('practice')
+            setActiveTab('main')
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to parse shared poem from URL', err)
+        })
     }
   }, []) // Empty dependency array ensures it runs once on mount.
 
