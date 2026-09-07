@@ -3,7 +3,7 @@ import { ArrowLeft, Eraser, Type } from 'lucide-react'
 import clsx from 'clsx'
 import MemorizeText from './MemorizeText'
 
-export default function PracticeView({ text, onBack }) {
+export default function PracticeView({ text, onBack, sliderStep = 5, revealDuration = 5 }) {
   const [sliderValue, setSliderValue] = useState(0)
   const [mode, setMode] = useState('eraser') // 'eraser' | 'first-letters'
 
@@ -120,31 +120,32 @@ export default function PracticeView({ text, onBack }) {
       )}
 
       {/* Main Text Area */}
-      <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 md:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-sm min-h-[40vh] font-serif leading-relaxed">
+      <div className="bg-white dark:bg-zinc-900 rounded-3xl p-5 md:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-sm min-h-[40vh] font-serif leading-relaxed mb-44 md:mb-36">
         <MemorizeText
           text={displayedText}
           mode={mode}
           sliderValue={sliderValue}
+          revealDuration={revealDuration}
         />
       </div>
 
-      {/* Fixed Bottom Slider */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-t border-zinc-200/70 dark:border-zinc-800 p-4 pb-12 md:p-6 z-20">
-        <div className="max-w-2xl mx-auto flex flex-col gap-3">
+      {/* Fixed Bottom Slider (above bottom navigation tabs with safe-area support) */}
+      <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] left-0 right-0 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200/70 dark:border-zinc-800 p-3 md:p-4 z-20">
+        <div className="max-w-2xl mx-auto flex flex-col gap-2.5">
           <div className="flex justify-between items-center px-1">
-            <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Скрыто</span>
+            <span className="text-xs md:text-sm font-medium text-zinc-600 dark:text-zinc-400">Скрыто</span>
             <div className="flex gap-2">
               <button 
-                onClick={() => setSliderValue(prev => Math.max(0, prev - 5))}
-                className="px-3 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg text-sm font-medium transition-colors active:scale-95"
+                onClick={() => setSliderValue(prev => Math.max(0, prev - sliderStep))}
+                className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg text-xs md:text-sm font-medium transition-colors active:scale-95 cursor-pointer"
               >
-                -5%
+                -{sliderStep}%
               </button>
               <button 
-                onClick={() => setSliderValue(prev => Math.min(100, prev + 5))}
-                className="px-3 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg text-sm font-medium transition-colors active:scale-95"
+                onClick={() => setSliderValue(prev => Math.min(100, prev + sliderStep))}
+                className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg text-xs md:text-sm font-medium transition-colors active:scale-95 cursor-pointer"
               >
-                +5%
+                +{sliderStep}%
               </button>
             </div>
           </div>
@@ -157,7 +158,7 @@ export default function PracticeView({ text, onBack }) {
               onChange={(e) => setSliderValue(Number(e.target.value))}
               className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-zinc-100 transition-all"
             />
-            <span className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-3 py-1 rounded-full text-xs font-semibold min-w-[3.5rem] text-center">
+            <span className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-2.5 py-0.5 rounded-full text-xs font-semibold min-w-[3.25rem] text-center">
               {sliderValue}%
             </span>
           </div>

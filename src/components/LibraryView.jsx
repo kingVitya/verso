@@ -4,17 +4,63 @@ import LZString from 'lz-string'
 
 export default function LibraryView({ poems, onOpen, onAdd, onEdit, onDelete }) {
   const [copiedId, setCopiedId] = useState(null)
+  const [sharingId, setSharingId] = useState(null)
 
-  const handleShare = (e, poem) => {
+  const handleShare = async (e, poem) => {
     e.stopPropagation()
+    setSharingId(poem.id)
+
     // Compress poem text
     const compressed = LZString.compressToEncodedURIComponent(poem.text)
-    const url = `${window.location.origin}${window.location.pathname}?share=${compressed}`
+    let shareUrl = `${window.location.origin}${window.location.pathname}?share=${compressed}`
     
-    navigator.clipboard.writeText(url).then(() => {
+    // If hosted on a public domain, auto-shorten with is.gd
+    const isLocalhost = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1' || 
+                        window.location.hostname.startsWith('192.168.') ||
+                        window.location.hostname.startsWith('10.') ||
+                        window.location.hostname.endsWith('.local')
+
+    if (!isLocalhost) {
+      try {
+        const response = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(shareUrl)}`)
+        const data = await response.json()
+        if (data && data.shorturl) {
+          shareUrl = data.shorturl
+        }
+      } catch (err) {
+        // Fallback to original compressed URL
+      }
+    }
+
+    // Use native mobile share if available (e.g. on iPhone / Android)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: poem.title || 'Стих в Verso',
+          text: `Стих «${poem.title || 'Без названия'}» для заучивания:`,
+          url: shareUrl
+        })
+        setSharingId(null)
+        return
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          setSharingId(null)
+          return
+        }
+      }
+    }
+
+    // Fallback: Copy to clipboard
+    try {
+      await navigator.clipboard.writeText(shareUrl)
       setCopiedId(poem.id)
       setTimeout(() => setCopiedId(null), 2000)
-    })
+    } catch (err) {
+      console.error('Failed to copy', err)
+    } finally {
+      setSharingId(null)
+    }
   }
 
   const handleDelete = (e, id) => {
