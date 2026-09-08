@@ -25,3 +25,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Poetry datasets / local data
+russian_poetry/
+*.csv

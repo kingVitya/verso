@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import LZString from 'lz-string'
 import { Home, User, BookOpen } from 'lucide-react'
 import clsx from 'clsx'
 import InputView from './components/InputView'

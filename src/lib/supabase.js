@@ -32,7 +32,7 @@ export async function sharePoemToSupabase(text, title = '') {
     body: JSON.stringify({
       id,
       title: title || '',
-      text,
+      text: normalizePoemText(text),
     }),
   })
 
@@ -45,7 +45,12 @@ export async function sharePoemToSupabase(text, title = '') {
 }
 
 /**
- * Normalizes poem text by replacing literal escaped \n and \r\n with real newlines.
+ * Normalizes poem text:
+ * - Replaces CRLF (\r\n) and literal escaped \\r\\n with real newlines
+ * - Replaces literal escaped \\n with real newlines
+ * - Normalizes typed /n line breaks (e.g. "строка1/nстрока2" or "строка1 /n строка2")
+ *   while safely preserving URLs (e.g. https://.../notes)
+ * - Preserves stanzas (double newlines) and trims outer whitespace
  */
 export function normalizePoemText(text) {
   if (!text) return ''
@@ -53,6 +58,7 @@ export function normalizePoemText(text) {
     .replace(/\\r\\n/g, '\n')
     .replace(/\\n/g, '\n')
     .replace(/\r\n/g, '\n')
+    .replace(/(?<!https?:\/\/\S*)\/n(?![a-zA-Z0-9])/g, '\n')
     .trim()
 }
 
@@ -96,16 +102,102 @@ export async function fetchSharedPoemFromSupabase(id) {
 }
 
 /**
- * Fetches public poems from the Supabase catalog.
+ * Fetches public poems from the Supabase catalog with server-side pagination, search, and filtering.
+ * Returns { poems: Array, totalCount: number }
  */
-export async function fetchCatalogPoems() {
+export async function fetchCatalogPoems({
+  page = 1,
+  pageSize = 12,
+  searchQuery = '',
+  selectedAuthor = 'all',
+  selectedTag = 'all',
+} = {}) {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    return []
+    return { poems: [], totalCount: 0 }
+  }
+
+  try {
+    const offset = Math.max(0, (page - 1) * pageSize)
+    const params = new URLSearchParams()
+    params.set('select', 'id,title,author,text,tags,created_at')
+    params.set('order', 'author.asc,title.asc')
+    params.set('limit', String(pageSize))
+    params.set('offset', String(offset))
+
+    // Author filter
+    if (selectedAuthor && selectedAuthor !== 'all') {
+      params.set('author', `eq.${selectedAuthor}`)
+    }
+
+    // Tag filter
+    if (selectedTag && selectedTag !== 'all') {
+      params.set('tags', `cs.{${selectedTag}}`)
+    }
+
+    // Search query across title, author, and text
+    const cleanQuery = (searchQuery || '').replace(/[(),]/g, ' ').trim()
+    if (cleanQuery) {
+      const q = `*${cleanQuery}*`
+      params.set('or', `(title.ilike.${q},author.ilike.${q},text.ilike.${q})`)
+    }
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/catalog_poems?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Accept': 'application/json',
+        'Prefer': 'count=exact',
+      },
+    })
+
+    if (!res.ok) {
+      console.warn('Failed to fetch catalog poems from Supabase:', res.status)
+      return { poems: [], totalCount: 0 }
+    }
+
+    // Extract total count from Content-Range header (e.g. "0-11/16693" or "*/0")
+    let totalCount = 0
+    const contentRange = res.headers.get('content-range')
+    if (contentRange) {
+      const parts = contentRange.split('/')
+      if (parts[1] && parts[1] !== '*') {
+        totalCount = parseInt(parts[1], 10) || 0
+      }
+    }
+
+    const data = await res.json()
+    if (!Array.isArray(data)) {
+      return { poems: [], totalCount: 0 }
+    }
+
+    const poems = data.map((poem) => ({
+      ...poem,
+      text: normalizePoemText(poem.text),
+    }))
+
+    if (!totalCount && poems.length > 0) {
+      totalCount = poems.length
+    }
+
+    return { poems, totalCount }
+  } catch (err) {
+    console.error('Error fetching catalog poems:', err)
+    return { poems: [], totalCount: 0 }
+  }
+}
+
+/**
+ * Fetches lightweight catalog metadata (distinct authors and tags) without poem texts.
+ */
+export async function fetchCatalogMetadata() {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    return { sortedAuthors: [], counts: {}, topAuthors: [], tags: [], totalCount: 0 }
   }
 
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/catalog_poems?select=id,title,author,text,tags,created_at&order=author.asc,title.asc`,
+      `${SUPABASE_URL}/rest/v1/catalog_poems?select=author,tags&order=author.asc`,
       {
         method: 'GET',
         headers: {
@@ -117,19 +209,41 @@ export async function fetchCatalogPoems() {
     )
 
     if (!res.ok) {
-      console.warn('Failed to fetch catalog poems from Supabase:', res.status)
-      return []
+      return { sortedAuthors: [], counts: {}, topAuthors: [], tags: [], totalCount: 0 }
     }
 
     const data = await res.json()
-    if (!Array.isArray(data)) return []
-    return data.map((poem) => ({
-      ...poem,
-      text: normalizePoemText(poem.text),
-    }))
+    if (!Array.isArray(data)) {
+      return { sortedAuthors: [], counts: {}, topAuthors: [], tags: [], totalCount: 0 }
+    }
+
+    const counts = {}
+    const tagsSet = new Set()
+
+    for (const item of data) {
+      if (item.author) {
+        counts[item.author] = (counts[item.author] || 0) + 1
+      }
+      if (Array.isArray(item.tags)) {
+        for (const t of item.tags) {
+          if (t && typeof t === 'string' && t.trim()) {
+            tagsSet.add(t.trim())
+          }
+        }
+      }
+    }
+
+    const sortedAuthors = Object.keys(counts).sort((a, b) => a.localeCompare(b, 'ru'))
+    const topAuthors = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 7)
+      .map(([name]) => name)
+    const tags = Array.from(tagsSet).sort((a, b) => a.localeCompare(b, 'ru'))
+
+    return { sortedAuthors, counts, topAuthors, tags, totalCount: data.length }
   } catch (err) {
-    console.error('Error fetching catalog poems:', err)
-    return []
+    console.error('Error fetching catalog metadata:', err)
+    return { sortedAuthors: [], counts: {}, topAuthors: [], tags: [], totalCount: 0 }
   }
 }
 

@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { ArrowLeft, Eraser, Type } from 'lucide-react'
 import clsx from 'clsx'
 import MemorizeText from './MemorizeText'
+import { normalizePoemText } from '../lib/supabase'
 
 export default function PracticeView({ 
   text, 
@@ -30,12 +31,8 @@ export default function PracticeView({
 
   // Split into chunks by double newline
   const chunks = useMemo(() => {
-    // Normalize literal escaped \n and standard newlines, then split by 2 or more newlines
-    const normalizedText = (text || '')
-      .replace(/\\r\\n/g, '\n')
-      .replace(/\\n/g, '\n')
-      .replace(/\r\n/g, '\n')
-      .trim()
+    // Universal newline normalization (standard \n, \r\n, literal \n, /n line delimiters)
+    const normalizedText = normalizePoemText(text)
     const parts = normalizedText.split(/\n\s*\n/)
     return parts.filter(p => p.trim().length > 0)
   }, [text])

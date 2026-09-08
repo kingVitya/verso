@@ -89,7 +89,7 @@ export default function LibraryView({ poems, onOpen, onAdd, onEdit, onDelete }) 
                 </h3>
               </div>
               
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 line-clamp-3 leading-relaxed font-serif">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 line-clamp-3 leading-relaxed font-serif whitespace-pre-line">
                 {poem.text}
               </p>
 
