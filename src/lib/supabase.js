@@ -138,16 +138,21 @@ export async function fetchCatalogPoems({
   searchQuery = '',
   selectedAuthor = 'all',
   selectedTag = 'all',
+  sortBy = 'popularity',
 } = {}) {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return { poems: [], totalCount: 0 }
   }
 
-  try {
+  const executeFetch = async (includePopularity, sortOrder) => {
     const offset = Math.max(0, (page - 1) * pageSize)
     const params = new URLSearchParams()
-    params.set('select', 'id,title,author,text,tags,created_at')
-    params.set('order', 'author.asc,title.asc')
+    const selectFields = includePopularity
+      ? 'id,title,author,text,tags,popularity,created_at'
+      : 'id,title,author,text,tags,created_at'
+
+    params.set('select', selectFields)
+    params.set('order', sortOrder)
     params.set('limit', String(pageSize))
     params.set('offset', String(offset))
 
@@ -168,7 +173,7 @@ export async function fetchCatalogPoems({
       params.set('or', `(title.ilike.${q},author.ilike.${q},text.ilike.${q})`)
     }
 
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/catalog_poems?${params.toString()}`, {
+    return fetch(`${SUPABASE_URL}/rest/v1/catalog_poems?${params.toString()}`, {
       method: 'GET',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
@@ -177,6 +182,35 @@ export async function fetchCatalogPoems({
         'Prefer': 'count=exact',
       },
     })
+  }
+
+  try {
+    let sortOrder = 'popularity.desc,author.asc,title.asc'
+    let includePopularity = true
+
+    if (sortBy === 'author') {
+      sortOrder = 'author.asc,title.asc'
+      includePopularity = false
+    } else if (sortBy === 'title') {
+      sortOrder = 'title.asc,author.asc'
+      includePopularity = false
+    }
+
+    let res = await executeFetch(includePopularity, sortOrder)
+
+    // Graceful fallback: if remote table does not yet have 'popularity' column (error 42703),
+    // automatically fallback to author sorting so app never breaks before migration
+    if (!res.ok && res.status === 400 && includePopularity) {
+      try {
+        const errJson = await res.clone().json()
+        if (errJson && (errJson.code === '42703' || String(errJson.message).includes('popularity'))) {
+          console.warn('Column "popularity" not yet added to Supabase. Falling back to author sort.')
+          res = await executeFetch(false, 'author.asc,title.asc')
+        }
+      } catch {
+        // Ignore JSON parsing issues
+      }
+    }
 
     if (!res.ok) {
       console.warn('Failed to fetch catalog poems from Supabase:', res.status)

@@ -103,6 +103,58 @@ describe('fetchCatalogPoems', () => {
     expect(calledUrl).toContain('or=')
   })
 
+  it('applies popularity sorting by default in URL parameters', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      headers: { get: () => '0-0/1' },
+      json: async () => [{ id: '1', title: 'Парус', author: 'Михаил Лермонтов', text: 'Текст', popularity: 1000 }],
+    })
+
+    await fetchCatalogPoems({ page: 1, pageSize: 12 })
+    const calledUrl = globalThis.fetch.mock.calls[0][0]
+    expect(calledUrl).toContain('order=popularity.desc')
+    expect(calledUrl).toContain('select=id%2Ctitle%2Cauthor%2Ctext%2Ctags%2Cpopularity%2Ccreated_at')
+  })
+
+  it('applies author or title sorting when requested', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      headers: { get: () => '0-0/1' },
+      json: async () => [{ id: '1', title: 'Парус', author: 'Михаил Лермонтов', text: 'Текст' }],
+    })
+
+    await fetchCatalogPoems({ page: 1, pageSize: 12, sortBy: 'author' })
+    expect(globalThis.fetch.mock.calls[0][0]).toContain('order=author.asc%2Ctitle.asc')
+
+    await fetchCatalogPoems({ page: 1, pageSize: 12, sortBy: 'title' })
+    expect(globalThis.fetch.mock.calls[1][0]).toContain('order=title.asc%2Cauthor.asc')
+  })
+
+  it('gracefully falls back to author sorting if popularity column is missing (error 42703)', async () => {
+    const errorResponse = {
+      ok: false,
+      status: 400,
+      clone: () => ({
+        json: async () => ({ code: '42703', message: 'column catalog_poems.popularity does not exist' }),
+      }),
+    }
+    const successFallbackResponse = {
+      ok: true,
+      headers: { get: () => '0-0/1' },
+      json: async () => [{ id: '1', title: 'Парус', author: 'Михаил Лермонтов', text: 'Текст' }],
+    }
+
+    globalThis.fetch = vi.fn()
+      .mockResolvedValueOnce(errorResponse)
+      .mockResolvedValueOnce(successFallbackResponse)
+
+    const result = await fetchCatalogPoems({ page: 1, pageSize: 12, sortBy: 'popularity' })
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2)
+    const fallbackUrl = globalThis.fetch.mock.calls[1][0]
+    expect(fallbackUrl).toContain('order=author.asc%2Ctitle.asc')
+    expect(result.poems.length).toBe(1)
+  })
+
   it('returns empty array and 0 count when network fails', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
@@ -170,6 +222,17 @@ describe('catalogCache', () => {
     setCachedCatalogMetadata(meta)
 
     expect(getCachedCatalogMetadata()).toEqual(meta)
+  })
+
+  it('generates distinct cache keys for different sort modes', () => {
+    const keyPopularity = generateCatalogCacheKey({ page: 1, sortBy: 'popularity' })
+    const keyAuthor = generateCatalogCacheKey({ page: 1, sortBy: 'author' })
+    const keyTitle = generateCatalogCacheKey({ page: 1, sortBy: 'title' })
+    expect(keyPopularity).not.toBe(keyAuthor)
+    expect(keyAuthor).not.toBe(keyTitle)
+    expect(keyPopularity).toContain('popularity')
+    expect(keyAuthor).toContain('author')
+    expect(keyTitle).toContain('title')
   })
 
   it('clears all cached items when clearCatalogCache is called', () => {

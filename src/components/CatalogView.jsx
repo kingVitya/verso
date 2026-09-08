@@ -11,7 +11,9 @@ import {
   ChevronRight, 
   ChevronDown, 
   Tag, 
-  User
+  User,
+  Flame,
+  ArrowUpDown
 } from 'lucide-react'
 import clsx from 'clsx'
 import { fetchCatalogPoems, fetchCatalogMetadata } from '../lib/supabase'
@@ -68,6 +70,7 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [selectedAuthor, setSelectedAuthor] = useState('all')
   const [selectedTag, setSelectedTag] = useState('all')
+  const [sortBy, setSortBy] = useState('popularity')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
 
@@ -91,7 +94,7 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
   // Reset to page 1 whenever any filter changes
   useEffect(() => {
     setPage(1)
-  }, [debouncedQuery, selectedAuthor, selectedTag, pageSize])
+  }, [debouncedQuery, selectedAuthor, selectedTag, pageSize, sortBy])
 
   // Load catalog metadata (authors and tags) on mount (cached in session/memory)
   const loadMetadata = async (force = false) => {
@@ -127,6 +130,7 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
         searchQuery: debouncedQuery,
         selectedAuthor,
         selectedTag,
+        sortBy,
       })
 
       // 1. Check local cache first: if already downloaded, serve immediately with 0 network requests
@@ -147,6 +151,7 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
           searchQuery: debouncedQuery,
           selectedAuthor,
           selectedTag,
+          sortBy,
         })
 
         if (!isCancelled) {
@@ -166,7 +171,7 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
     return () => {
       isCancelled = true
     }
-  }, [page, pageSize, debouncedQuery, selectedAuthor, selectedTag])
+  }, [page, pageSize, debouncedQuery, selectedAuthor, selectedTag, sortBy])
 
   // Force refresh: clear local cache and re-fetch both metadata and current page
   const handleForceRefresh = async () => {
@@ -179,6 +184,7 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
       searchQuery: debouncedQuery,
       selectedAuthor,
       selectedTag,
+      sortBy,
     })
     const cacheKey = generateCatalogCacheKey({
       page,
@@ -186,6 +192,7 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
       searchQuery: debouncedQuery,
       selectedAuthor,
       selectedTag,
+      sortBy,
     })
     setCachedCatalogPage(cacheKey, result)
     setPoems(result.poems)
@@ -252,20 +259,21 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
     })
   }
 
-  const hasActiveFilters = searchQuery !== '' || selectedAuthor !== 'all' || selectedTag !== 'all'
+  const hasActiveFilters = searchQuery !== '' || selectedAuthor !== 'all' || selectedTag !== 'all' || sortBy !== 'popularity'
 
   const resetFilters = () => {
     setSearchQuery('')
     setSelectedAuthor('all')
     setSelectedTag('all')
+    setSortBy('popularity')
   }
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-300">
       {/* Search and Filters Header */}
       <div className="flex flex-col gap-3">
-        {/* Search Bar with Refresh Button */}
-        <div className="flex gap-2 items-center">
+        {/* Search Bar with Sort and Refresh Controls */}
+        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
           <div className="relative flex-1">
             <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
             <input
@@ -286,14 +294,32 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
             )}
           </div>
 
-          <button
-            onClick={handleForceRefresh}
-            disabled={refreshing}
-            className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all cursor-pointer shrink-0 shadow-xs active:scale-95"
-            title="Обновить каталог из Supabase"
-          >
-            <RefreshCw className={clsx("w-5 h-5", refreshing && "animate-spin text-zinc-900 dark:text-zinc-100")} />
-          </button>
+          <div className="flex gap-2 items-center shrink-0">
+            {/* Sort Selector */}
+            <div className="relative inline-flex items-center flex-1 sm:flex-none">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="appearance-none w-full sm:w-auto pl-8 pr-8 py-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-200 outline-none cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-xs"
+                title="Сортировка стихов"
+              >
+                <option value="popularity">🔥 По популярности</option>
+                <option value="author">👤 По автору (А–Я)</option>
+                <option value="title">🔤 По названию (А–Я)</option>
+              </select>
+              <ArrowUpDown className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 pointer-events-none" />
+              <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 pointer-events-none" />
+            </div>
+
+            <button
+              onClick={handleForceRefresh}
+              disabled={refreshing}
+              className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all cursor-pointer shrink-0 shadow-xs active:scale-95"
+              title="Обновить каталог из Supabase"
+            >
+              <RefreshCw className={clsx("w-5 h-5", refreshing && "animate-spin text-zinc-900 dark:text-zinc-100")} />
+            </button>
+          </div>
         </div>
 
         {/* Authors Row: Quick Chips + Full Dropdown Selector */}
@@ -436,6 +462,15 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
                   />
                 </span>
               )}
+              {sortBy !== 'popularity' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-200/80 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
+                  {sortBy === 'author' ? 'По автору' : 'По названию'}
+                  <X 
+                    className="w-3 h-3 cursor-pointer hover:text-red-500" 
+                    onClick={() => setSortBy('popularity')} 
+                  />
+                </span>
+              )}
             </div>
 
             <button
@@ -507,9 +542,20 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
                   className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 flex flex-col gap-3 shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
                 >
                   <div>
-                    <span className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block">
-                      {poem.author}
-                    </span>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block truncate">
+                        {poem.author}
+                      </span>
+                      {poem.popularity >= 900 && (
+                        <span 
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-800/40 shrink-0 select-none"
+                          title="Шедевр классики / Топ популярности"
+                        >
+                          <Flame className="w-3 h-3 fill-amber-500 text-amber-500" />
+                          <span>Топ</span>
+                        </span>
+                      )}
+                    </div>
                     <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-lg leading-snug mt-0.5">
                       {poem.title}
                     </h3>

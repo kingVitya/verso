@@ -6,11 +6,19 @@
 const memoryCache = new Map()
 const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
 
-export function generateCatalogCacheKey({ page = 1, pageSize = 12, searchQuery = '', selectedAuthor = 'all', selectedTag = 'all' }) {
+export function generateCatalogCacheKey({ 
+  page = 1, 
+  pageSize = 12, 
+  searchQuery = '', 
+  selectedAuthor = 'all', 
+  selectedTag = 'all',
+  sortBy = 'popularity'
+}) {
   const q = (searchQuery || '').trim().toLowerCase()
   const author = (selectedAuthor || 'all').trim()
   const tag = (selectedTag || 'all').trim()
-  return `catalog_${page}_${pageSize}_${author}_${tag}_${q}`
+  const sort = (sortBy || 'popularity').trim()
+  return `catalog_${page}_${pageSize}_${author}_${tag}_${sort}_${q}`
 }
 
 export function getCachedCatalogPage(key) {
