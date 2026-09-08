@@ -45,21 +45,48 @@ export async function sharePoemToSupabase(text, title = '') {
 }
 
 /**
+ * Automatically groups lines into 4-line stanzas (quatrains) if the text has NO stanza breaks at all.
+ * If the poem already contains stanza breaks (\n\n), it preserves the original formatting intact.
+ */
+export function ensureStanzas(text) {
+  if (!text || typeof text !== 'string') return ''
+
+  // If text already has double newlines / stanza breaks, keep intact
+  if (/\n\s*\n/.test(text)) {
+    return text
+  }
+
+  const lines = text.split('\n').map((l) => l.trim()).filter((l) => l.length > 0)
+  if (lines.length <= 4) {
+    return lines.join('\n')
+  }
+
+  const stanzas = []
+  for (let i = 0; i < lines.length; i += 4) {
+    stanzas.push(lines.slice(i, i + 4).join('\n'))
+  }
+  return stanzas.join('\n\n')
+}
+
+/**
  * Normalizes poem text:
  * - Replaces CRLF (\r\n) and literal escaped \\r\\n with real newlines
  * - Replaces literal escaped \\n with real newlines
  * - Normalizes typed /n line breaks (e.g. "строка1/nстрока2" or "строка1 /n строка2")
  *   while safely preserving URLs (e.g. https://.../notes)
+ * - Automatically ensures stanzas for single-spaced walls of text
  * - Preserves stanzas (double newlines) and trims outer whitespace
  */
 export function normalizePoemText(text) {
   if (!text) return ''
-  return text
+  const cleaned = text
     .replace(/\\r\\n/g, '\n')
     .replace(/\\n/g, '\n')
     .replace(/\r\n/g, '\n')
     .replace(/(?<!https?:\/\/\S*)\/n(?![a-zA-Z0-9])/g, '\n')
     .trim()
+
+  return ensureStanzas(cleaned)
 }
 
 /**

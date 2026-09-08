@@ -24,8 +24,15 @@ describe('normalizePoemText', () => {
 
   it('normalizes slash-n (/n) line breaks when used as delimiters', () => {
     expect(normalizePoemText('Белеет парус/nВ тумане моря')).toBe('Белеет парус\nВ тумане моря')
-    expect(normalizePoemText('Белеет парус /n В тумане моря')).toBe('Белеет парус \n В тумане моря')
+    expect(normalizePoemText('Белеет парус /n В тумане моря')).toBe('Белеет парус\nВ тумане моря')
     expect(normalizePoemText('Строфа 1/n/nСтрофа 2')).toBe('Строфа 1\n\nСтрофа 2')
+  })
+
+  it('automatically breaks single-spaced poems into quatrain stanzas when double newlines are missing', () => {
+    const raw8 = 'Строка 1\nСтрока 2\nСтрока 3\nСтрока 4\nСтрока 5\nСтрока 6\nСтрока 7\nСтрока 8'
+    const normalized = normalizePoemText(raw8)
+    expect(normalized).toBe('Строка 1\nСтрока 2\nСтрока 3\nСтрока 4\n\nСтрока 5\nСтрока 6\nСтрока 7\nСтрока 8')
+    expect(normalized.split(/\n\s*\n/).length).toBe(2)
   })
 
   it('preserves URLs and normal words that contain / without breaking them', () => {
