@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { ArrowLeft, Eraser, Type } from 'lucide-react'
+import { ArrowLeft, Eraser, Type, Eye, EyeOff } from 'lucide-react'
 import clsx from 'clsx'
 import MemorizeText from './MemorizeText'
 import { normalizePoemText } from '../lib/supabase'
@@ -92,10 +92,10 @@ export default function PracticeView({
           <button
             onClick={() => setMode('eraser')}
             className={clsx(
-              "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm transition-all",
+              "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm transition-all border",
               mode === 'eraser'
-                ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white font-medium"
-                : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+                ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100 shadow-sm font-semibold"
+                : "border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
             )}
           >
             <Eraser className="w-4 h-4" />
@@ -104,10 +104,10 @@ export default function PracticeView({
           <button
             onClick={() => setMode('first-letters')}
             className={clsx(
-              "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm transition-all",
+              "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm transition-all border",
               mode === 'first-letters'
-                ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white font-medium"
-                : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+                ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100 shadow-sm font-semibold"
+                : "border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
             )}
           >
             <Type className="w-4 h-4" />
@@ -182,7 +182,8 @@ export default function PracticeView({
               </button>
             </div>
           </div>
-          <div className="flex items-center gap-4 w-full">
+          <div className="flex items-center gap-3 w-full pt-1">
+            <Eye className="w-4 h-4 text-zinc-400 shrink-0" />
             <input
               type="range"
               min="0"
@@ -191,7 +192,8 @@ export default function PracticeView({
               onChange={(e) => setSliderValue(Number(e.target.value))}
               className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-zinc-100 transition-all"
             />
-            <span className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-2.5 py-0.5 rounded-full text-xs font-semibold min-w-[3.25rem] text-center">
+            <EyeOff className="w-4 h-4 text-zinc-400 shrink-0" />
+            <span className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-2.5 py-0.5 rounded-full text-xs font-semibold min-w-[3.25rem] text-center shrink-0 ml-1">
               {sliderValue}%
             </span>
           </div>

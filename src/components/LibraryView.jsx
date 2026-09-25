@@ -233,128 +233,118 @@ export default function LibraryView({
   return (
     <div className="flex flex-col gap-5 animate-in fade-in duration-300">
       
-      {/* Top Action Row: Add Poem & Create Folder */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <button 
-          id="btn-add-poem"
-          type="button"
-          onClick={() => onAdd(activeFolder ? activeFolder.id : null)}
-          className="flex items-center justify-center gap-2.5 w-full py-3.5 px-4 rounded-2xl font-medium text-sm text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm transition-all active:scale-[0.98] cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>
-            {activeFolder ? `Добавить стих в «${activeFolder.name}»` : 'Добавить новый стих'}
-          </span>
-        </button>
-
-        <button 
-          id="btn-create-folder"
-          type="button"
-          onClick={() => {
-            setNewFolderName('')
-            setCreateFolderModalOpen(true)
-          }}
-          className="flex items-center justify-center gap-2.5 w-full py-3.5 px-4 rounded-2xl font-medium text-sm bg-white hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-850 text-zinc-800 dark:text-zinc-200 border border-zinc-200/80 dark:border-zinc-800 shadow-xs transition-all active:scale-[0.98] cursor-pointer"
-        >
-          <FolderPlus className="w-4 h-4 text-zinc-500" />
-          <span>Создать папку</span>
-        </button>
-      </div>
-
-      {/* Horizontal Folders Bar (Chips) */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-0.5 no-scrollbar scroll-smooth">
-        {/* All Poems Chip */}
-        <button
-          type="button"
-          onClick={() => {
-            setSelectedFolderId(null)
-            onSelectFolder(null)
-          }}
-          className={clsx(
-            "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer select-none shrink-0",
-            selectedFolderId === null
-              ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
-              : "bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
-          )}
-        >
-          <BookOpen className="w-3.5 h-3.5 opacity-80" />
-          <span>Все стихи</span>
-          <span className={clsx(
-            "px-1.5 py-0.5 rounded-full text-[10px] font-mono",
-            selectedFolderId === null
-              ? "bg-white/20 text-white dark:bg-zinc-900/20 dark:text-zinc-900"
-              : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400"
-          )}>
-            {poems.length}
-          </span>
-        </button>
-
-        {/* Custom Folder Chips */}
-        {folders.map(folder => {
-          const count = poems.filter(p => p.folderId === folder.id).length
-          const isSelected = selectedFolderId === folder.id
-
-          return (
-            <button
-              key={folder.id}
-              type="button"
-              onClick={() => {
-                setSelectedFolderId(folder.id)
-                onSelectFolder(folder.id)
-              }}
-              className={clsx(
-                "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer select-none shrink-0",
-                isSelected
-                  ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
-                  : "bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-700"
-              )}
-            >
-              <Folder className={clsx("w-3.5 h-3.5", isSelected ? "text-amber-300 dark:text-amber-500 fill-current" : "text-amber-500/80")} />
-              <span className="max-w-[130px] truncate">{folder.name}</span>
-              <span className={clsx(
-                "px-1.5 py-0.5 rounded-full text-[10px] font-mono",
-                isSelected
-                  ? "bg-white/20 text-white dark:bg-zinc-900/20 dark:text-zinc-900"
-                  : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400"
-              )}>
-                {count}
-              </span>
-            </button>
-          )
-        })}
-
-        {/* Uncategorized Chip (if any exist and there is at least one folder) */}
-        {folders.length > 0 && uncategorizedCount > 0 && (
+      {/* Horizontal Folders Bar with Compact Actions */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 no-scrollbar scroll-smooth flex-1 min-w-0">
+          {/* All Poems Chip */}
           <button
             type="button"
             onClick={() => {
-              setSelectedFolderId('uncategorized')
-              onSelectFolder('uncategorized')
+              setSelectedFolderId(null)
+              onSelectFolder(null)
             }}
             className={clsx(
-              "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer select-none shrink-0",
-              selectedFolderId === 'uncategorized'
-                ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                : "bg-white dark:bg-zinc-900 border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400"
+              "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer select-none shrink-0",
+              selectedFolderId === null
+                ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
+                : "bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
             )}
           >
-            <span>Без папки</span>
-            <span className="text-[10px] opacity-75 font-mono">({uncategorizedCount})</span>
+            <BookOpen className="w-3.5 h-3.5 opacity-80" />
+            <span>Все стихи</span>
+            <span className={clsx(
+              "px-1.5 py-0.5 rounded-full text-[10px] font-mono",
+              selectedFolderId === null
+                ? "bg-white/20 text-white dark:bg-zinc-900/20 dark:text-zinc-900"
+                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400"
+            )}>
+              {poems.length}
+            </span>
           </button>
-        )}
 
-        {/* Small Add Folder Button at end of bar */}
+          {/* Custom Folder Chips */}
+          {folders.map(folder => {
+            const count = poems.filter(p => p.folderId === folder.id).length
+            const isSelected = selectedFolderId === folder.id
+
+            return (
+              <button
+                key={folder.id}
+                type="button"
+                onClick={() => {
+                  setSelectedFolderId(folder.id)
+                  onSelectFolder(folder.id)
+                }}
+                className={clsx(
+                  "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer select-none shrink-0",
+                  isSelected
+                    ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
+                    : "bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-700"
+                )}
+              >
+                <Folder className={clsx("w-3.5 h-3.5", isSelected ? "text-amber-300 dark:text-amber-500 fill-current" : "text-amber-500/80")} />
+                <span className="max-w-[130px] truncate">{folder.name}</span>
+                <span className={clsx(
+                  "px-1.5 py-0.5 rounded-full text-[10px] font-mono",
+                  isSelected
+                    ? "bg-white/20 text-white dark:bg-zinc-900/20 dark:text-zinc-900"
+                    : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400"
+                )}>
+                  {count}
+                </span>
+              </button>
+            )
+          })}
+
+          {/* Uncategorized Chip (if any exist and there is at least one folder) */}
+          {folders.length > 0 && uncategorizedCount > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedFolderId('uncategorized')
+                onSelectFolder('uncategorized')
+              }}
+              className={clsx(
+                "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer select-none shrink-0",
+                selectedFolderId === 'uncategorized'
+                  ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                  : "bg-white dark:bg-zinc-900 border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400"
+              )}
+            >
+              <span>Без папки</span>
+              <span className="text-[10px] opacity-75 font-mono">({uncategorizedCount})</span>
+            </button>
+          )}
+
+          {/* Small Add Folder Button */}
+          <button
+            id="btn-create-folder"
+            type="button"
+            onClick={() => {
+              setNewFolderName('')
+              setCreateFolderModalOpen(true)
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100 bg-zinc-100/70 hover:bg-zinc-200/70 dark:bg-zinc-800/60 dark:hover:bg-zinc-800 transition-colors shrink-0 cursor-pointer"
+            title="Создать новую папку"
+          >
+            <FolderPlus className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+            <span>Новая папка</span>
+          </button>
+        </div>
+
+        {/* Compact Add Poem Button on top right */}
         <button
+          id="btn-add-poem"
           type="button"
-          onClick={() => {
-            setNewFolderName('')
-            setCreateFolderModalOpen(true)
-          }}
-          className="flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-colors shrink-0 cursor-pointer"
-          title="Создать новую папку"
+          onClick={() => onAdd(activeFolder ? activeFolder.id : null)}
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-white shadow-xs transition-all active:scale-95 cursor-pointer shrink-0"
+          title={activeFolder ? `Добавить стих в «${activeFolder.name}»` : 'Добавить новый стих'}
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>Папка</span>
+          <span className="hidden sm:inline">
+            {activeFolder ? `В «${activeFolder.name}»` : 'Стих'}
+          </span>
+          <span className="sm:hidden">Стих</span>
         </button>
       </div>
 
@@ -384,18 +374,28 @@ export default function LibraryView({
             </div>
           </div>
 
-          {/* Folder Action Buttons: Share Folder, Manage Poems, Delete */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Folder Action Buttons: Add Poem, Share Folder, Manage Poems, Delete */}
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            <button
+              type="button"
+              onClick={() => onAdd(activeFolder.id)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-white shadow-xs transition-all active:scale-95 cursor-pointer"
+              title="Добавить стих в эту папку"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Добавить стих</span>
+            </button>
+
             <button
               id="btn-share-folder"
               type="button"
               onClick={handleShareCurrentFolder}
               disabled={sharingFolder || filteredPoems.length === 0}
               className={clsx(
-                "flex items-center gap-2 px-3.5 py-2 rounded-xl font-medium text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer",
+                "flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer",
                 filteredPoems.length === 0
                   ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed"
-                  : "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-white"
+                  : "bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700"
               )}
               title={filteredPoems.length === 0 ? "Сначала добавьте стихи в папку" : "Поделиться всей папкой"}
             >
@@ -404,7 +404,7 @@ export default function LibraryView({
               ) : (
                 <Share2 className="w-4 h-4" />
               )}
-              <span>Поделиться папкой</span>
+              <span>Поделиться</span>
             </button>
 
             <button
@@ -466,10 +466,18 @@ export default function LibraryView({
           </div>
         ) : (
           /* Empty Library State */
-          <div className="text-center text-zinc-500 dark:text-zinc-400 mt-10">
+          <div className="text-center text-zinc-500 dark:text-zinc-400 mt-10 flex flex-col items-center">
             <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-20" />
             <p className="font-medium text-zinc-800 dark:text-zinc-200">Ваша библиотека пуста.</p>
-            <p className="text-sm mt-1">Добавьте первый стих, чтобы начать заучивание!</p>
+            <p className="text-sm mt-1 mb-5">Добавьте первый стих, чтобы начать заучивание!</p>
+            <button
+              type="button"
+              onClick={() => onAdd(null)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm transition-all active:scale-95 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Добавить стих</span>
+            </button>
           </div>
         )
       ) : (

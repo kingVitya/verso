@@ -194,7 +194,7 @@ export default function InputView({
           <button
             type="submit"
             disabled={loadingLink || !linkInput.trim()}
-            className="px-4 py-2.5 rounded-xl font-medium text-sm text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
+            className="px-4 py-2.5 rounded-xl font-medium text-sm text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white disabled:bg-zinc-200 disabled:text-zinc-400 disabled:dark:bg-zinc-800 disabled:dark:text-zinc-500 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
           >
             {loadingLink ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -302,7 +302,7 @@ export default function InputView({
             "flex items-center justify-center gap-3 w-full py-3.5 px-6 rounded-2xl font-medium text-[15px] transition-all active:scale-[0.98] cursor-pointer",
             loading 
               ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed" 
-              : "bg-zinc-100 text-zinc-800 hover:bg-zinc-200/80 dark:bg-zinc-800/80 dark:text-zinc-200 dark:hover:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60"
+              : "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm"
           )}
         >
           {loading ? (

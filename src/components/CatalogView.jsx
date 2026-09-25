@@ -13,10 +13,11 @@ import {
   Tag, 
   User,
   Flame,
-  ArrowUpDown
+  ArrowUpDown,
+  Sparkles
 } from 'lucide-react'
 import clsx from 'clsx'
-import { fetchCatalogPoems, fetchCatalogMetadata } from '../lib/supabase'
+import { fetchCatalogPoems, fetchCatalogMetadata, fetchRecommendedPoems } from '../lib/supabase'
 import { 
   generateCatalogCacheKey, 
   getCachedCatalogPage, 
@@ -64,6 +65,12 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [recommended, setRecommended] = useState([])
+
+  // Load recommendations
+  useEffect(() => {
+    fetchRecommendedPoems().then(setRecommended)
+  }, [])
 
   // Filters and pagination state
   const [searchQuery, setSearchQuery] = useState('')
@@ -304,6 +311,7 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
                 title="Сортировка стихов"
               >
                 <option value="popularity">🔥 По популярности</option>
+                <option value="newest">🆕 Новые (последние добавленные)</option>
                 <option value="author">👤 По автору (А–Я)</option>
                 <option value="title">🔤 По названию (А–Я)</option>
               </select>
@@ -368,25 +376,7 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
               )}
             </div>
 
-            {/* Author Dropdown selector for all authors */}
-            {metadata.sortedAuthors.length > 5 && (
-              <div className="relative inline-flex items-center shrink-0">
-                <select
-                  value={selectedAuthor}
-                  onChange={(e) => setSelectedAuthor(e.target.value)}
-                  className="appearance-none w-full sm:w-auto pl-8 pr-8 py-1.5 rounded-xl text-xs font-medium bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 outline-none cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-                >
-                  <option value="all">Выбрать автора из {metadata.sortedAuthors.length}...</option>
-                  {metadata.sortedAuthors.map((author) => (
-                    <option key={author} value={author}>
-                      {author} ({metadata.counts[author] || 0})
-                    </option>
-                  ))}
-                </select>
-                <User className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 pointer-events-none" />
-                <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 pointer-events-none" />
-              </div>
-            )}
+
           </div>
         )}
 
@@ -482,6 +472,61 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
           </div>
         )}
       </div>
+
+      {/* Recommendations Section */}
+      {!loading && !hasActiveFilters && recommended.length > 0 && page === 1 && (
+        <div className="flex flex-col gap-3">
+          <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2 px-1">
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            Рекомендуем вам
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
+            {recommended.map(poem => {
+              const isAdded = checkIsAlreadyAdded(poem)
+              return (
+                <div 
+                  key={poem.id} 
+                  className="bg-zinc-50/50 dark:bg-zinc-800/30 border-2 border-zinc-200/60 dark:border-zinc-800 rounded-2xl p-4 flex flex-col gap-3 relative group"
+                >
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <h3 className="font-semibold text-[15px] text-zinc-900 dark:text-white leading-tight truncate">
+                      {poem.title}
+                    </h3>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium truncate flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 opacity-70" />
+                      {poem.author}
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 mt-1">
+                    <button
+                      onClick={() => handlePractice(poem)}
+                      className="flex-1 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 px-3 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>Учить</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => !isAdded && handleAdd(poem)}
+                      disabled={isAdded}
+                      className={clsx(
+                        "w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0 border",
+                        isAdded 
+                          ? "bg-zinc-100 dark:bg-zinc-800 border-transparent text-zinc-400 dark:text-zinc-500 cursor-default" 
+                          : "bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 active:scale-95 cursor-pointer shadow-sm"
+                      )}
+                      title={isAdded ? "Уже в библиотеке" : "Добавить в библиотеку"}
+                    >
+                      {isAdded ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Loading state */}
       {loading ? (

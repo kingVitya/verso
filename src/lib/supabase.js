@@ -219,10 +219,23 @@ export async function fetchCatalogPoems({
     }
 
     // Search query across title, author, and text
+    // Split into words so "Пушкин утро" matches author="Пушкин" and title="Зимнее утро"
     const cleanQuery = (searchQuery || '').replace(/[(),]/g, ' ').trim()
     if (cleanQuery) {
-      const q = `*${cleanQuery}*`
-      params.set('or', `(title.ilike.${q},author.ilike.${q},text.ilike.${q})`)
+      const words = cleanQuery.split(/\s+/).filter(w => w.length > 0)
+      if (words.length > 0) {
+        const andConditions = words.map(w => {
+          const q = `*${w}*`
+          return `or(title.ilike.${q},author.ilike.${q},text.ilike.${q})`
+        })
+        if (andConditions.length === 1) {
+          // Fallback to simple OR if only one word
+          params.set('or', `(title.ilike.*${words[0]}*,author.ilike.*${words[0]}*,text.ilike.*${words[0]}*)`)
+        } else {
+          // PostgREST syntax for nested AND/OR: and=(or(..),or(..))
+          params.set('and', `(${andConditions.join(',')})`)
+        }
+      }
     }
 
     return fetch(`${SUPABASE_URL}/rest/v1/catalog_poems?${params.toString()}`, {
@@ -245,6 +258,9 @@ export async function fetchCatalogPoems({
       includePopularity = false
     } else if (sortBy === 'title') {
       sortOrder = 'title.asc,author.asc'
+      includePopularity = false
+    } else if (sortBy === 'newest') {
+      sortOrder = 'created_at.desc'
       includePopularity = false
     }
 
@@ -346,17 +362,47 @@ export async function fetchCatalogMetadata() {
       }
     }
 
-    const sortedAuthors = Object.keys(counts).sort((a, b) => a.localeCompare(b, 'ru'))
-    const topAuthors = Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 7)
-      .map(([name]) => name)
+    // Sort all authors by number of poems (descending), then alphabetically
+    const sortedAuthors = Object.keys(counts).sort((a, b) => {
+      if (counts[b] !== counts[a]) {
+        return counts[b] - counts[a]
+      }
+      return a.localeCompare(b, 'ru')
+    })
+    const topAuthors = sortedAuthors // Pass all sorted authors to UI instead of limiting to 7
     const tags = Array.from(tagsSet).sort((a, b) => a.localeCompare(b, 'ru'))
 
     return { sortedAuthors, counts, topAuthors, tags, totalCount: data.length }
   } catch (err) {
     console.error('Error fetching catalog metadata:', err)
     return { sortedAuthors: [], counts: {}, topAuthors: [], tags: [], totalCount: 0 }
+  }
+}
+
+/**
+ * Fetches a random selection of poems to serve as daily recommendations.
+ * It fetches a slightly larger pool from the catalog and shuffles them on the client.
+ */
+export async function fetchRecommendedPoems() {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return []
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/catalog_poems?select=id,title,author,text,tags,created_at&limit=40`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      }
+    })
+    if (!res.ok) return []
+    const data = await res.json()
+    // Shuffle the results and take up to 3
+    const shuffled = data.sort(() => 0.5 - Math.random())
+    return shuffled.slice(0, 3).map(poem => ({
+      ...poem,
+      text: normalizePoemText(poem.text)
+    }))
+  } catch (e) {
+    console.error('Error fetching recommendations:', e)
+    return []
   }
 }
 
