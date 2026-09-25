@@ -23,6 +23,7 @@ export default function ProfileView({
   theme, 
   setTheme, 
   poemsCount = 0,
+  foldersCount = 0,
   sliderStep = 5,
   setSliderStep = () => {},
   revealDuration = 5,
@@ -397,15 +398,22 @@ export default function ProfileView({
           </div>
           <div>
             <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-              Сохранено стихов
+              Сохранено в библиотеке
             </div>
             <div className="text-xs text-zinc-400 dark:text-zinc-500">
               Доступны офлайн в памяти браузера
             </div>
           </div>
         </div>
-        <div className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 font-mono">
-          {poemsCount}
+        <div className="text-right">
+          <div className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 font-mono">
+            {poemsCount}
+          </div>
+          {foldersCount > 0 && (
+            <div className="text-[11px] text-zinc-400 dark:text-zinc-500 font-medium">
+              в {foldersCount} {foldersCount === 1 ? 'папке' : 'папках'}
+            </div>
+          )}
         </div>
       </div>
 

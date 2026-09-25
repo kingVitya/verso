@@ -46,6 +46,27 @@ describe('parseAndFetchPoem', () => {
     expect(result.text).toBe('Ночевала тучка золотая...')
   })
 
+  it('decompresses folder JSON format from LZString link (?folder_share=...)', async () => {
+    const folderData = {
+      type: 'folder',
+      name: '9 класс',
+      poems: [
+        { title: 'Узник', text: 'Сижу за решёткой в темнице сырой...' },
+        { title: 'Бородино', text: 'Скажи-ка, дядя, ведь не даром...' }
+      ]
+    }
+    const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(folderData))
+    const url = `https://verso.app/?folder_share=${compressed}`
+
+    const result = await parseAndFetchPoem(url)
+    expect(result.type).toBe('folder')
+    expect(result.name).toBe('9 класс')
+    expect(result.poems).toHaveLength(2)
+    expect(result.poems[0].title).toBe('Узник')
+    expect(result.poems[1].title).toBe('Бородино')
+    expect(result.source).toBe('compressed')
+  })
+
   it('throws an error when invalid string is passed', async () => {
     await expect(parseAndFetchPoem('not a valid url or code !@#$%')).rejects.toThrow()
   })

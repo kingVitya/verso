@@ -29,4 +29,30 @@ describe('Library Backup & Validation Rules', () => {
     const parsed = JSON.parse(invalidObj)
     expect(Array.isArray(parsed)).toBe(false)
   })
+
+  it('validates V2 backup structure with folders and poems', () => {
+    const v2Backup = JSON.stringify({
+      version: 2,
+      exportedAt: Date.now(),
+      folders: [
+        { id: 'f-1', name: '9 класс', createdAt: 12345 }
+      ],
+      poems: [
+        {
+          id: 'test-1',
+          title: 'У лукоморья',
+          text: 'У лукоморья дуб зелёный...',
+          folderId: 'f-1',
+          createdAt: 123456789,
+        }
+      ]
+    })
+
+    const parsed = JSON.parse(v2Backup)
+    expect(parsed.version).toBe(2)
+    expect(Array.isArray(parsed.folders)).toBe(true)
+    expect(Array.isArray(parsed.poems)).toBe(true)
+    expect(parsed.folders[0].name).toBe('9 класс')
+    expect(parsed.poems[0].folderId).toBe('f-1')
+  })
 })
