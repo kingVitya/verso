@@ -140,7 +140,8 @@ export default function InputView({
   }
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24">
+    <>
+      <div className="flex flex-col gap-6 animate-in fade-in duration-300 pb-32">
       
       {onCancel && (
         <div className="flex items-center gap-3 mb-2">
@@ -315,8 +316,9 @@ export default function InputView({
           />
         </div>
       </div>
+    </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200/80 dark:border-zinc-800 z-10 flex justify-center">
+    <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200/80 dark:border-zinc-800 z-30 flex justify-center">
         <button
           onClick={() => onSave({ text, title })}
           disabled={loading || !text.trim()}
@@ -331,6 +333,6 @@ export default function InputView({
           <span>Сохранить и начать</span>
         </button>
       </div>
-    </div>
+    </>
   )
 }

@@ -77,8 +77,21 @@ export default function LibraryView({
       {/* Header Actions */}
       {poems.length > 0 && (
         <div className="flex items-center justify-between px-1 mb-1">
-          <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Ваша библиотека</h2>
-          <span className="text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">{poems.length} {poems.length === 1 ? 'стих' : (poems.length >= 2 && poems.length <= 4) ? 'стиха' : 'стихов'}</span>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Ваша библиотека</h2>
+            <span className="text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-0.5 rounded-full">
+              {poems.length} {poems.length === 1 ? 'стих' : (poems.length >= 2 && poems.length <= 4) ? 'стиха' : 'стихов'}
+            </span>
+          </div>
+          <button
+            id="btn-add-poem"
+            type="button"
+            onClick={() => onAdd()}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-medium text-xs sm:text-sm text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm transition-all active:scale-95 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Добавить стих</span>
+          </button>
         </div>
       )}
 
@@ -158,18 +171,6 @@ export default function LibraryView({
         </div>
       )}
 
-      {/* Floating Action Button */}
-      {poems.length > 0 && (
-        <button
-          id="btn-add-poem-fab"
-          type="button"
-          onClick={() => onAdd()}
-          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-8 z-40 w-14 h-14 rounded-full bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
-          title="Добавить новый стих"
-        >
-          <Plus className="w-6 h-6" />
-        </button>
-      )}
     </div>
   )
 }

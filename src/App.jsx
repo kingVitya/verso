@@ -79,7 +79,10 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden font-sans selection:bg-zinc-200 selection:text-zinc-900 dark:selection:bg-zinc-800 dark:selection:text-white pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]">
+    <div className={clsx(
+      "min-h-screen w-full max-w-full overflow-x-hidden font-sans selection:bg-zinc-200 selection:text-zinc-900 dark:selection:bg-zinc-800 dark:selection:text-white",
+      (route === 'library' || activeTab === 'catalog' || activeTab === 'profile') && "pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]"
+    )}>
       <header 
         className="px-4 py-3 sm:py-4 text-center bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-zinc-200/60 dark:border-zinc-800/60 sticky top-0 z-10 cursor-pointer transition-colors w-full max-w-full overflow-x-hidden" 
         onClick={navigateToLibrary}
@@ -125,6 +128,10 @@ function App() {
             onAddToLibrary={({ title, text }) => {
               addPoem(text, title)
               showToast(`Стих «${title || 'Без названия'}» добавлен в библиотеку!`)
+              if (route === 'input') {
+                setRoute('library')
+                setActiveTab('main')
+              }
             }}
           />
         ) : (
@@ -184,7 +191,12 @@ function App() {
           <button
             id="tab-main"
             type="button"
-            onClick={() => setActiveTab('main')}
+            onClick={() => {
+              if (route === 'input') {
+                setRoute('library')
+              }
+              setActiveTab('main')
+            }}
             className={clsx(
               "flex flex-col items-center justify-center gap-0.5 sm:gap-1 flex-1 py-1 rounded-xl transition-all cursor-pointer select-none",
               activeTab === 'main'

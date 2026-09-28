@@ -75,93 +75,95 @@ export default function PracticeView({
   const isAllSelected = activeChunkIndices.size === chunks.length
 
   return (
-    <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <>
+      <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in duration-300 pb-36 sm:pb-32">
 
-      {/* Top Bar: Back & Toggle */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <button
-          onClick={handleBack}
-          className="flex items-center gap-2 self-start md:self-auto text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors py-2 cursor-pointer"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="font-medium">Назад</span>
-        </button>
-
-        {/* Mode Toggle (Segmented Control) */}
-        <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800/80 rounded-xl w-full md:w-auto">
+        {/* Top Bar: Back & Toggle */}
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <button
-            onClick={() => setMode('eraser')}
-            className={clsx(
-              "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm transition-all border",
-              mode === 'eraser'
-                ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100 shadow-sm font-semibold"
-                : "border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
-            )}
+            onClick={handleBack}
+            className="flex items-center gap-2 self-start md:self-auto text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors py-2 cursor-pointer"
           >
-            <Eraser className="w-4 h-4" />
-            <span>Ластик</span>
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-medium">Назад</span>
           </button>
-          <button
-            onClick={() => setMode('first-letters')}
-            className={clsx(
-              "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm transition-all border",
-              mode === 'first-letters'
-                ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100 shadow-sm font-semibold"
-                : "border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
-            )}
-          >
-            <Type className="w-4 h-4" />
-            <span>Первые буквы</span>
-          </button>
-        </div>
-      </div>
 
-      {/* Parts Navigation */}
-      {chunks.length > 1 && (
-        <div 
-          className="flex overflow-x-auto pb-2 w-full max-w-full hide-scrollbar gap-2 overscroll-x-contain touch-pan-x"
-          style={{ overscrollBehaviorX: 'contain', WebkitOverflowScrolling: 'touch' }}
-        >
-          {chunks.map((_, i) => (
+          {/* Mode Toggle (Segmented Control) */}
+          <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800/80 rounded-xl w-full md:w-auto">
             <button
-              key={i}
-              onClick={() => toggleChunk(i)}
+              onClick={() => setMode('eraser')}
               className={clsx(
-                "whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition-all active:scale-95 border shrink-0",
-                activeChunkIndices.has(i)
+                "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm transition-all border",
+                mode === 'eraser'
+                  ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100 shadow-sm font-semibold"
+                  : "border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+              )}
+            >
+              <Eraser className="w-4 h-4" />
+              <span>Ластик</span>
+            </button>
+            <button
+              onClick={() => setMode('first-letters')}
+              className={clsx(
+                "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm transition-all border",
+                mode === 'first-letters'
+                  ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100 shadow-sm font-semibold"
+                  : "border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+              )}
+            >
+              <Type className="w-4 h-4" />
+              <span>Первые буквы</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Parts Navigation */}
+        {chunks.length > 1 && (
+          <div 
+            className="flex overflow-x-auto pb-2 w-full max-w-full hide-scrollbar gap-2 overscroll-x-contain touch-pan-x"
+            style={{ overscrollBehaviorX: 'contain', WebkitOverflowScrolling: 'touch' }}
+          >
+            {chunks.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => toggleChunk(i)}
+                className={clsx(
+                  "whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition-all active:scale-95 border shrink-0",
+                  activeChunkIndices.has(i)
+                    ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100"
+                    : "bg-zinc-100 text-zinc-600 border-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                )}
+              >
+                Часть {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={selectAllChunks}
+              className={clsx(
+                "whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition-all active:scale-95 border ml-1 shrink-0",
+                isAllSelected
                   ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100"
                   : "bg-zinc-100 text-zinc-600 border-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700"
               )}
             >
-              Часть {i + 1}
+              Выбрать все
             </button>
-          ))}
-          <button
-            onClick={selectAllChunks}
-            className={clsx(
-              "whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition-all active:scale-95 border ml-1 shrink-0",
-              isAllSelected
-                ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100"
-                : "bg-zinc-100 text-zinc-600 border-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700"
-            )}
-          >
-            Выбрать все
-          </button>
-        </div>
-      )}
+          </div>
+        )}
 
-      {/* Main Text Area */}
-      <div className="bg-white dark:bg-zinc-900 rounded-3xl p-5 md:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-sm min-h-[40vh] font-serif leading-relaxed mb-32 md:mb-24">
-        <MemorizeText
-          text={displayedText}
-          mode={mode}
-          sliderValue={sliderValue}
-          revealDuration={revealDuration}
-        />
+        {/* Main Text Area */}
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl p-5 md:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-sm min-h-[40vh] font-serif leading-relaxed">
+          <MemorizeText
+            text={displayedText}
+            mode={mode}
+            sliderValue={sliderValue}
+            revealDuration={revealDuration}
+          />
+        </div>
       </div>
 
       {/* Fixed Bottom Slider */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200/70 dark:border-zinc-800/80 p-3 md:p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] z-20 shadow-xs">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200/80 dark:border-zinc-800/80 p-3.5 md:p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] z-30 shadow-lg">
         <div className="max-w-2xl mx-auto flex flex-col gap-2.5">
           <div className="flex justify-between items-center px-1">
             <span className="text-xs md:text-sm font-medium text-zinc-600 dark:text-zinc-400">Скрыто</span>
@@ -188,7 +190,7 @@ export default function PracticeView({
               max="100"
               value={sliderValue}
               onChange={(e) => setSliderValue(Number(e.target.value))}
-              className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-zinc-100 transition-all"
+              className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-zinc-100 transition-all touch-none"
             />
             <EyeOff className="w-4 h-4 text-zinc-400 shrink-0" />
             <span className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-2.5 py-0.5 rounded-full text-xs font-semibold min-w-[3.25rem] text-center shrink-0 ml-1">
@@ -197,6 +199,6 @@ export default function PracticeView({
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
