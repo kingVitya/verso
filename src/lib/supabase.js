@@ -44,57 +44,6 @@ export async function sharePoemToSupabase(text, title = '') {
   return id
 }
 
-/**
- * Saves a shared folder containing poems to Supabase and returns its short ID.
- */
-export async function shareFolderToSupabase(name, poems) {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    throw new Error('Supabase credentials are not configured')
-  }
-
-  const cleanName = (name || 'Папка стихов').trim().slice(0, 100)
-  const cleanPoems = (poems || []).map((p) => ({
-    title: (p.title || '').trim().slice(0, 150),
-    text: normalizePoemText(p.text || '').slice(0, 30000),
-  }))
-
-  const payload = {
-    type: 'folder',
-    v: 1,
-    name: cleanName,
-    poems: cleanPoems,
-  }
-
-  const jsonString = JSON.stringify(payload)
-  if (jsonString.length > 30000) {
-    throw new Error('Размер папки слишком велик для короткой ссылки')
-  }
-
-  const id = generateShortId(8)
-  const title = `📁 ${cleanName}`.slice(0, 150)
-
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/shared_poems`, {
-    method: 'POST',
-    headers: {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=minimal',
-    },
-    body: JSON.stringify({
-      id,
-      title,
-      text: jsonString,
-    }),
-  })
-
-  if (!res.ok) {
-    const errText = await res.text()
-    throw new Error(`Failed to save folder to Supabase: ${errText}`)
-  }
-
-  return id
-}
 
 /**
  * Automatically groups lines into 4-line stanzas (quatrains) if the text has NO stanza breaks at all.
@@ -376,33 +325,6 @@ export async function fetchCatalogMetadata() {
   } catch (err) {
     console.error('Error fetching catalog metadata:', err)
     return { sortedAuthors: [], counts: {}, topAuthors: [], tags: [], totalCount: 0 }
-  }
-}
-
-/**
- * Fetches a random selection of poems to serve as daily recommendations.
- * It fetches a slightly larger pool from the catalog and shuffles them on the client.
- */
-export async function fetchRecommendedPoems() {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return []
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/catalog_poems?select=id,title,author,text,tags,created_at&limit=40`, {
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      }
-    })
-    if (!res.ok) return []
-    const data = await res.json()
-    // Shuffle the results and take up to 3
-    const shuffled = data.sort(() => 0.5 - Math.random())
-    return shuffled.slice(0, 3).map(poem => ({
-      ...poem,
-      text: normalizePoemText(poem.text)
-    }))
-  } catch (e) {
-    console.error('Error fetching recommendations:', e)
-    return []
   }
 }
 

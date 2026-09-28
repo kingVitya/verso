@@ -151,7 +151,7 @@ export default function PracticeView({
       )}
 
       {/* Main Text Area */}
-      <div className="bg-white dark:bg-zinc-900 rounded-3xl p-5 md:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-sm min-h-[40vh] font-serif leading-relaxed mb-48 md:mb-40">
+      <div className="bg-white dark:bg-zinc-900 rounded-3xl p-5 md:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-sm min-h-[40vh] font-serif leading-relaxed mb-32 md:mb-24">
         <MemorizeText
           text={displayedText}
           mode={mode}
@@ -160,10 +160,8 @@ export default function PracticeView({
         />
       </div>
 
-      {/* Fixed Bottom Slider (flush above bottom navigation tabs with safe-area support) */}
-      <div className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] left-0 right-0 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-b border-zinc-200/70 dark:border-zinc-800/80 p-3 md:p-4 z-20 shadow-xs">
-        {/* Underlay extending downwards to prevent any subpixel text bleed between slider and nav bar */}
-        <div className="absolute top-full left-0 right-0 h-6 bg-white dark:bg-zinc-950 -z-10 pointer-events-none" />
+      {/* Fixed Bottom Slider */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200/70 dark:border-zinc-800/80 p-3 md:p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] z-20 shadow-xs">
         <div className="max-w-2xl mx-auto flex flex-col gap-2.5">
           <div className="flex justify-between items-center px-1">
             <span className="text-xs md:text-sm font-medium text-zinc-600 dark:text-zinc-400">Скрыто</span>

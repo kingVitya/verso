@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { createWorker } from 'tesseract.js'
-import { Camera, Loader2, Play, Link2, Download, Check, AlertCircle, BookOpen, Folder } from 'lucide-react'
+import { Camera, Loader2, Play, Link2, Download, Check, AlertCircle, BookOpen, Folder, ArrowLeft } from 'lucide-react'
 import clsx from 'clsx'
 import { parseAndFetchPoem } from '../lib/shareParser'
 import { MAX_TITLE_LENGTH, MAX_TEXT_LENGTH } from '../hooks/useLibrary'
@@ -57,16 +57,12 @@ const preprocessImage = (file) => {
 export default function InputView({ 
   initialText = '', 
   initialTitle = '', 
-  initialFolderId = null,
-  folders = [],
   onSave, 
   onCancel, 
-  onSelectFromCatalog,
-  onImportFolder 
+  onSelectFromCatalog
 }) {
   const [text, setText] = useState(initialText)
   const [title, setTitle] = useState(initialTitle)
-  const [folderId, setFolderId] = useState(initialFolderId)
   const [loading, setLoading] = useState(false)
   const fileInputRef = useRef(null)
 
@@ -75,7 +71,6 @@ export default function InputView({
   const [loadingLink, setLoadingLink] = useState(false)
   const [linkError, setLinkError] = useState('')
   const [linkSuccess, setLinkSuccess] = useState('')
-  const [folderImportPrompt, setFolderImportPrompt] = useState(null)
 
   const handleImportFromLink = async (e) => {
     if (e) e.preventDefault()
@@ -84,15 +79,9 @@ export default function InputView({
     setLoadingLink(true)
     setLinkError('')
     setLinkSuccess('')
-    setFolderImportPrompt(null)
 
     try {
       const data = await parseAndFetchPoem(linkInput)
-      if (data.type === 'folder') {
-        setFolderImportPrompt(data)
-        setLinkInput('')
-        return
-      }
       const cleanText = (data.text || '').slice(0, MAX_TEXT_LENGTH)
       const cleanTitle = (data.title || '').slice(0, MAX_TITLE_LENGTH)
       setText(cleanText)
@@ -151,15 +140,18 @@ export default function InputView({
   }
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24">
       
       {onCancel && (
-        <button 
-          onClick={onCancel}
-          className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white self-start font-medium -mb-2 transition-colors cursor-pointer"
-        >
-          ← Назад
-        </button>
+        <div className="flex items-center gap-3 mb-2">
+          <button 
+            onClick={onCancel}
+            className="p-2 -ml-2 rounded-xl text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:hover:text-white transition-colors cursor-pointer flex items-center justify-center"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Добавление стиха</h2>
+        </div>
       )}
 
       {/* Import via link block */}
@@ -216,45 +208,6 @@ export default function InputView({
           <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium animate-in fade-in">
             <Check className="w-3.5 h-3.5 shrink-0" />
             <span>{linkSuccess}</span>
-          </div>
-        )}
-
-        {folderImportPrompt && (
-          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300">
-                <Folder className="w-5 h-5 fill-current" />
-              </div>
-              <div>
-                <div className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  В ссылке найдена папка «{folderImportPrompt.name}»
-                </div>
-                <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                  Содержит {folderImportPrompt.poems.length} {folderImportPrompt.poems.length === 1 ? 'стих' : 'стихов'}.
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setFolderImportPrompt(null)}
-                className="px-3 py-1.5 rounded-lg text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 cursor-pointer"
-              >
-                Отмена
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (onImportFolder) {
-                    onImportFolder(folderImportPrompt)
-                  }
-                  setFolderImportPrompt(null)
-                }}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-white transition-all cursor-pointer shadow-xs active:scale-95"
-              >
-                Импортировать папку
-              </button>
-            </div>
           </div>
         )}
       </div>
@@ -341,31 +294,6 @@ export default function InputView({
           />
         </div>
 
-        {folders.length > 0 && (
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400 ml-1">
-              Папка
-            </label>
-            <div className="relative">
-              <select
-                value={folderId || ''}
-                onChange={(e) => setFolderId(e.target.value || null)}
-                className="w-full p-3.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-sm font-medium text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 cursor-pointer appearance-none"
-              >
-                <option value="">Без папки (в общий список)</option>
-                {folders.map(f => (
-                  <option key={f.id} value={f.id}>
-                    📁 {f.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
-                ▾
-              </div>
-            </div>
-          </div>
-        )}
-
         <div className="flex flex-col gap-1">
           <div className="flex justify-between items-center ml-1">
             <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
@@ -388,19 +316,21 @@ export default function InputView({
         </div>
       </div>
 
-      <button
-        onClick={() => onSave({ text, title, folderId })}
-        disabled={loading || !text.trim()}
-        className={clsx(
-          "flex items-center justify-center gap-2 w-full py-4 px-6 rounded-2xl font-bold text-[15px] transition-all active:scale-[0.98] cursor-pointer",
-          !text.trim() || loading
-            ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed"
-            : "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm"
-        )}
-      >
-        <Play className="w-5 h-5 fill-current" />
-        <span>Сохранить и начать</span>
-      </button>
+      <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200/80 dark:border-zinc-800 z-10 flex justify-center">
+        <button
+          onClick={() => onSave({ text, title })}
+          disabled={loading || !text.trim()}
+          className={clsx(
+            "flex items-center justify-center gap-2 w-full max-w-md py-3.5 px-6 rounded-2xl font-bold text-[15px] transition-all active:scale-[0.98] cursor-pointer",
+            !text.trim() || loading
+              ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed"
+              : "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm"
+          )}
+        >
+          <Play className="w-5 h-5 fill-current" />
+          <span>Сохранить и начать</span>
+        </button>
+      </div>
     </div>
   )
 }
