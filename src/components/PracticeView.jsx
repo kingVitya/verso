@@ -172,8 +172,7 @@ export default function PracticeView({
         {/* Parts Navigation */}
         {chunks.length > 1 && (
           <div 
-            className="flex overflow-x-auto pb-2 w-full max-w-full hide-scrollbar gap-2 overscroll-x-contain touch-pan-x"
-            style={{ overscrollBehaviorX: 'contain', WebkitOverflowScrolling: 'touch' }}
+            className="flex overflow-x-auto pb-2 w-full max-w-full hide-scrollbar gap-2"
           >
             {chunks.map((_, i) => (
               <button
@@ -205,8 +204,10 @@ export default function PracticeView({
 
         {/* Main Text Area */}
         <div 
-          className="bg-white dark:bg-zinc-900 rounded-3xl p-4 sm:p-6 md:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-sm min-h-[40vh] font-serif leading-relaxed overflow-x-auto overscroll-x-contain touch-pan-x"
-          style={{ WebkitOverflowScrolling: 'touch' }}
+          className={clsx(
+            "bg-white dark:bg-zinc-900 rounded-3xl p-4 sm:p-6 md:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-sm min-h-[40vh] font-serif leading-relaxed",
+            wrapLines ? "overflow-x-hidden" : "overflow-x-auto"
+          )}
         >
           <MemorizeText
             text={displayedText}

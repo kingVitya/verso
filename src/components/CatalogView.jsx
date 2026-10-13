@@ -328,8 +328,7 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
           <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
             {/* Quick chips container */}
             <div
-              className="flex items-center overflow-x-auto pb-1 gap-2 hide-scrollbar overscroll-x-contain touch-pan-x flex-1"
-              style={{ overscrollBehaviorX: 'contain', WebkitOverflowScrolling: 'touch' }}
+              className="flex items-center overflow-x-auto pb-1 gap-2 hide-scrollbar flex-1"
             >
               <button
                 onClick={() => setSelectedAuthor('all')}
@@ -376,8 +375,7 @@ export default function CatalogView({ onPractice, onAddToLibrary, userPoems = []
         {/* Tags Row */}
         {metadata.tags.length > 0 && (
           <div
-            className="flex items-center overflow-x-auto pb-1 gap-1.5 hide-scrollbar overscroll-x-contain touch-pan-x"
-            style={{ overscrollBehaviorX: 'contain', WebkitOverflowScrolling: 'touch' }}
+            className="flex items-center overflow-x-auto pb-1 gap-1.5 hide-scrollbar"
           >
             <span className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mr-1 shrink-0 flex items-center gap-1">
               <Tag className="w-3 h-3" />

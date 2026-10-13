@@ -89,11 +89,11 @@ function App() {
 
   return (
     <div className={clsx(
-      "min-h-screen w-full max-w-full overflow-x-hidden font-sans selection:bg-zinc-200 selection:text-zinc-900 dark:selection:bg-zinc-800 dark:selection:text-white",
+      "min-h-screen w-full max-w-full overflow-x-clip font-sans selection:bg-zinc-200 selection:text-zinc-900 dark:selection:bg-zinc-800 dark:selection:text-white",
       (route === 'library' || activeTab === 'catalog' || activeTab === 'profile') && "pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]"
     )}>
       <header 
-        className="px-4 py-3 sm:py-4 text-center bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-zinc-200/60 dark:border-zinc-800/60 sticky top-0 z-10 cursor-pointer transition-colors w-full max-w-full overflow-x-hidden" 
+        className="px-4 py-3 sm:py-4 text-center bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-zinc-200/60 dark:border-zinc-800/60 sticky top-0 z-10 cursor-pointer transition-colors w-full max-w-full overflow-x-clip" 
         onClick={navigateToLibrary}
       >
         <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
@@ -102,7 +102,7 @@ function App() {
       </header>
       
       <main className={clsx(
-        "max-w-4xl w-full mx-auto p-3.5 sm:p-6 overflow-x-hidden",
+        "max-w-4xl w-full mx-auto p-3.5 sm:p-6",
         (route === 'library' || activeTab === 'catalog' || activeTab === 'profile') ? "pb-28 sm:pb-24" : "pb-10"
       )}>
         {activeTab === 'profile' ? (
