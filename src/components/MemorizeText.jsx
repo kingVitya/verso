@@ -5,7 +5,7 @@ import { shuffleArray } from '../lib/memorization/shuffle'
 import { getHiddenWordIndices } from '../lib/memorization/hideWords'
 import { calculateWordVisibility } from '../lib/memorization/firstLetters'
 
-export default function MemorizeText({ text, mode, sliderValue, revealDuration = 5, fontSize = 15 }) {
+export default function MemorizeText({ text, mode, sliderValue, revealDuration = 5, fontSize = 15, wrapLines = true }) {
   // We need deterministic shuffling per text chunk for the eraser mode
   // so the hidden words don't jump around when the slider moves.
   const [shuffledWordIndices, setShuffledWordIndices] = useState([])
@@ -216,9 +216,13 @@ export default function MemorizeText({ text, mode, sliderValue, revealDuration =
 
   return (
     <div 
-      className="whitespace-pre min-w-full w-fit pr-2 text-left font-medium select-text"
+      className={clsx(
+        "text-left font-medium select-text",
+        wrapLines ? "whitespace-pre-wrap break-words min-w-full" : "whitespace-pre min-w-full w-fit pr-2"
+      )}
       style={{ 
-        whiteSpace: 'pre',
+        whiteSpace: wrapLines ? 'pre-wrap' : 'pre',
+        wordBreak: wrapLines ? 'break-word' : 'normal',
         fontSize: `${fontSize}px`, 
         lineHeight: 1.75 
       }}

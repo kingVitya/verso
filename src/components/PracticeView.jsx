@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { ArrowLeft, Eraser, Type, Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, Eraser, Type, Eye, EyeOff, WrapText } from 'lucide-react'
 import clsx from 'clsx'
 import MemorizeText from './MemorizeText'
 import { normalizePoemText } from '../lib/supabase'
@@ -11,6 +11,8 @@ export default function PracticeView({
   revealDuration = 5,
   fontSize = 15,
   setFontSize = () => {},
+  wrapLines = true,
+  setWrapLines = () => {},
   onCompleteSession = () => {}
 }) {
   const [sliderValue, setSliderValue] = useState(0)
@@ -91,30 +93,49 @@ export default function PracticeView({
               <span className="font-medium">Назад</span>
             </button>
 
-            {/* Font size quick adjuster */}
-            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-xl">
+            <div className="flex items-center gap-1.5">
+              {/* Font size quick adjuster */}
+              <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setFontSize(Math.max(12, fontSize - 1))}
+                  disabled={fontSize <= 12}
+                  className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer active:scale-95"
+                  title="Уменьшить шрифт"
+                  aria-label="Уменьшить шрифт"
+                >
+                  A-
+                </button>
+                <span className="text-[11px] font-mono font-semibold text-zinc-500 dark:text-zinc-400 px-1 min-w-[26px] text-center select-none">
+                  {fontSize}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setFontSize(Math.min(24, fontSize + 1))}
+                  disabled={fontSize >= 24}
+                  className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer active:scale-95"
+                  title="Увеличить шрифт"
+                  aria-label="Увеличить шрифт"
+                >
+                  A+
+                </button>
+              </div>
+
+              {/* Wrap lines toggle */}
               <button
                 type="button"
-                onClick={() => setFontSize(Math.max(12, fontSize - 1))}
-                disabled={fontSize <= 12}
-                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer active:scale-95"
-                title="Уменьшить шрифт"
-                aria-label="Уменьшить шрифт"
+                onClick={() => setWrapLines(prev => !prev)}
+                className={clsx(
+                  "h-9 px-2 sm:px-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-medium transition-all cursor-pointer active:scale-95",
+                  wrapLines
+                    ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100 shadow-sm"
+                    : "bg-zinc-100 text-zinc-500 border-zinc-200/80 dark:bg-zinc-800/80 dark:text-zinc-400 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                )}
+                title={wrapLines ? "Перенос строк: включен (нажмите для одной строки со скроллом)" : "Перенос строк: выключен (нажмите для переноса)"}
+                aria-label="Перенос строк"
               >
-                A-
-              </button>
-              <span className="text-[11px] font-mono font-semibold text-zinc-500 dark:text-zinc-400 px-1 min-w-[26px] text-center select-none">
-                {fontSize}
-              </span>
-              <button
-                type="button"
-                onClick={() => setFontSize(Math.min(24, fontSize + 1))}
-                disabled={fontSize >= 24}
-                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer active:scale-95"
-                title="Увеличить шрифт"
-                aria-label="Увеличить шрифт"
-              >
-                A+
+                <WrapText className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{wrapLines ? 'Перенос' : 'В 1 строку'}</span>
               </button>
             </div>
           </div>
@@ -193,6 +214,7 @@ export default function PracticeView({
             sliderValue={sliderValue}
             revealDuration={revealDuration}
             fontSize={fontSize}
+            wrapLines={wrapLines}
           />
         </div>
       </div>

@@ -29,6 +29,8 @@ export default function ProfileView({
   setRevealDuration = () => {},
   fontSize = 15,
   setFontSize = () => {},
+  wrapLines = true,
+  setWrapLines = () => {},
   onExport = () => {},
   onImport = () => {}
 }) {
@@ -303,7 +305,7 @@ export default function ProfileView({
                   Размер текста
                 </span>
                 <span className="text-xs text-zinc-400 dark:text-zinc-500 truncate">
-                  Строки стихов отображаются строго без переносов
+                  {wrapLines ? 'Длинные строки мягко переносятся на новую строчку' : 'Строки стихов отображаются строго без переносов со скроллом'}
                 </span>
               </div>
             </div>
@@ -332,16 +334,52 @@ export default function ProfileView({
             ))}
           </div>
 
+          {/* Wrap lines toggle switch */}
+          <div className="flex items-center justify-between pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
+                Перенос длинных строк
+              </span>
+              <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
+                {wrapLines ? 'Включен: строки переносятся, если не влезают' : 'Выключен: строго в одну строку (со скроллом)'}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setWrapLines(prev => !prev)}
+              className={clsx(
+                "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                wrapLines ? "bg-zinc-900 dark:bg-zinc-100" : "bg-zinc-200 dark:bg-zinc-700"
+              )}
+              aria-label="Переключатель переноса строк"
+            >
+              <span
+                className={clsx(
+                  "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white dark:bg-zinc-900 shadow ring-0 transition duration-200 ease-in-out",
+                  wrapLines ? "translate-x-5" : "translate-x-0"
+                )}
+              />
+            </button>
+          </div>
+
           {/* Live Preview Box */}
           <div className="p-3 bg-zinc-50 dark:bg-zinc-800/40 rounded-xl border border-zinc-100 dark:border-zinc-800 overflow-x-auto">
             <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block mb-1">
               Предпросмотр:
             </span>
             <div 
-              className="whitespace-pre font-serif text-zinc-800 dark:text-zinc-200"
-              style={{ fontSize: `${fontSize}px`, lineHeight: 1.6 }}
+              className={clsx(
+                "font-serif text-zinc-800 dark:text-zinc-200",
+                wrapLines ? "whitespace-pre-wrap break-words" : "whitespace-pre"
+              )}
+              style={{ 
+                whiteSpace: wrapLines ? 'pre-wrap' : 'pre',
+                wordBreak: wrapLines ? 'break-word' : 'normal',
+                fontSize: `${fontSize}px`, 
+                lineHeight: 1.6 
+              }}
             >
-              А судьи кто? — За древностию лет
+              А судьи кто? — За древностию лет{'\n'}К свободной жизни их вражда непримирима,
             </div>
           </div>
         </div>

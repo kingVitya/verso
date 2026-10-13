@@ -46,6 +46,18 @@ export function useSettings() {
     return 15
   })
 
+  const [wrapLines, setWrapLinesState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('verso_wrap_lines')
+      if (saved !== null) {
+        return saved === 'true'
+      }
+    } catch (e) {
+      console.error(e)
+    }
+    return true // Default: text can wrap smoothly
+  })
+
   const setSliderStep = (val) => {
     const num = Math.min(100, Math.max(1, parseInt(val, 10) || 1))
     setSliderStepState(num)
@@ -76,12 +88,26 @@ export function useSettings() {
     }
   }
 
+  const setWrapLines = (val) => {
+    setWrapLinesState((prev) => {
+      const nextVal = typeof val === 'function' ? val(prev) : Boolean(val)
+      try {
+        localStorage.setItem('verso_wrap_lines', String(nextVal))
+      } catch (e) {
+        console.error(e)
+      }
+      return nextVal
+    })
+  }
+
   return { 
     sliderStep, 
     setSliderStep,
     revealDuration, 
     setRevealDuration,
     fontSize,
-    setFontSize
+    setFontSize,
+    wrapLines,
+    setWrapLines
   }
 }

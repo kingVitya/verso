@@ -28,7 +28,9 @@ function App() {
     revealDuration, 
     setRevealDuration,
     fontSize,
-    setFontSize
+    setFontSize,
+    wrapLines,
+    setWrapLines
   } = useSettings()
   
   const [activeTab, setActiveTab] = useState('main')
@@ -114,6 +116,8 @@ function App() {
             setRevealDuration={setRevealDuration}
             fontSize={fontSize}
             setFontSize={setFontSize}
+            wrapLines={wrapLines}
+            setWrapLines={setWrapLines}
             onExport={exportLibrary}
             onImport={importLibrary}
           />
@@ -182,6 +186,8 @@ function App() {
                 revealDuration={revealDuration}
                 fontSize={fontSize}
                 setFontSize={setFontSize}
+                wrapLines={wrapLines}
+                setWrapLines={setWrapLines}
                 onCompleteSession={() => recordPracticeSession(activePoem.id)}
               />
             )}
