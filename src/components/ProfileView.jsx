@@ -8,14 +8,14 @@ import {
   Sparkles, 
   ShieldCheck, 
   ChevronDown, 
-  Sliders, 
   Palette, 
   Clock, 
   Hand,
   Download,
   Upload,
   Database,
-  AlertCircle
+  AlertCircle,
+  Type
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -23,10 +23,12 @@ export default function ProfileView({
   theme, 
   setTheme, 
   poemsCount = 0,
-  sliderStep = 5,
+  sliderStep = 5, 
   setSliderStep = () => {},
   revealDuration = 5,
   setRevealDuration = () => {},
+  fontSize = 15,
+  setFontSize = () => {},
   onExport = () => {},
   onImport = () => {}
 }) {
@@ -287,7 +289,61 @@ export default function ProfileView({
             <Hand className="w-3.5 h-3.5" />
             <span>По тапу (показывается пока не нажмёте снова)</span>
           </button>
+        </div>
 
+        {/* 3. Text Size Plate ("Размер шрифта") */}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm flex flex-col gap-3.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 min-w-0 mr-2">
+              <div className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 shrink-0">
+                <Type className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold text-sm sm:text-base text-zinc-900 dark:text-zinc-100 truncate">
+                  Размер текста
+                </span>
+                <span className="text-xs text-zinc-400 dark:text-zinc-500 truncate">
+                  Строки стихов отображаются строго без переносов
+                </span>
+              </div>
+            </div>
+
+            <div className="px-2.5 py-1 rounded-full text-xs font-bold bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shrink-0 font-mono">
+              {fontSize} px
+            </div>
+          </div>
+
+          {/* Quick presets row */}
+          <div className="grid grid-cols-5 gap-1.5 w-full">
+            {[13, 14, 15, 16, 18].map((size) => (
+              <button
+                key={size}
+                type="button"
+                onClick={() => setFontSize(size)}
+                className={clsx(
+                  "py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer active:scale-95 border",
+                  fontSize === size
+                    ? "bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100 shadow-sm"
+                    : "bg-zinc-50 dark:bg-zinc-800/60 border-zinc-200/70 dark:border-zinc-700/70 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                )}
+              >
+                {size}px
+              </button>
+            ))}
+          </div>
+
+          {/* Live Preview Box */}
+          <div className="p-3 bg-zinc-50 dark:bg-zinc-800/40 rounded-xl border border-zinc-100 dark:border-zinc-800 overflow-x-auto">
+            <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block mb-1">
+              Предпросмотр:
+            </span>
+            <div 
+              className="whitespace-pre font-serif text-zinc-800 dark:text-zinc-200"
+              style={{ fontSize: `${fontSize}px`, lineHeight: 1.6 }}
+            >
+              А судьи кто? — За древностию лет
+            </div>
+          </div>
         </div>
 
       </div>

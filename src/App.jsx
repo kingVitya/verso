@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Home, User, BookOpen, X, Check } from 'lucide-react'
+import { Home, User, BookOpen, Check } from 'lucide-react'
 import clsx from 'clsx'
 import InputView from './components/InputView'
 import PracticeView from './components/PracticeView'
@@ -22,7 +22,14 @@ function App() {
     importLibrary 
   } = useLibrary()
   const { theme, setTheme } = useTheme()
-  const { sliderStep, setSliderStep, revealDuration, setRevealDuration } = useSettings()
+  const { 
+    sliderStep, 
+    setSliderStep, 
+    revealDuration, 
+    setRevealDuration,
+    fontSize,
+    setFontSize
+  } = useSettings()
   
   const [activeTab, setActiveTab] = useState('main')
   const [route, setRoute] = useState('library')
@@ -105,6 +112,8 @@ function App() {
             setSliderStep={setSliderStep}
             revealDuration={revealDuration}
             setRevealDuration={setRevealDuration}
+            fontSize={fontSize}
+            setFontSize={setFontSize}
             onExport={exportLibrary}
             onImport={importLibrary}
           />
@@ -171,6 +180,8 @@ function App() {
                 onBack={navigateToLibrary}
                 sliderStep={sliderStep}
                 revealDuration={revealDuration}
+                fontSize={fontSize}
+                setFontSize={setFontSize}
                 onCompleteSession={() => recordPracticeSession(activePoem.id)}
               />
             )}

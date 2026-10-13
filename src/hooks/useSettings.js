@@ -31,6 +31,21 @@ export function useSettings() {
     return 5
   })
 
+  const [fontSize, setFontSizeState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('verso_font_size')
+      if (saved !== null) {
+        const parsed = parseInt(saved, 10)
+        if (!isNaN(parsed) && parsed >= 12 && parsed <= 24) {
+          return parsed
+        }
+      }
+    } catch (e) {
+      console.error(e)
+    }
+    return 15
+  })
+
   const setSliderStep = (val) => {
     const num = Math.min(100, Math.max(1, parseInt(val, 10) || 1))
     setSliderStepState(num)
@@ -51,10 +66,22 @@ export function useSettings() {
     }
   }
 
+  const setFontSize = (val) => {
+    const num = Math.min(24, Math.max(12, parseInt(val, 10) || 15))
+    setFontSizeState(num)
+    try {
+      localStorage.setItem('verso_font_size', num.toString())
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   return { 
     sliderStep, 
     setSliderStep,
-    revealDuration,
-    setRevealDuration
+    revealDuration, 
+    setRevealDuration,
+    fontSize,
+    setFontSize
   }
 }

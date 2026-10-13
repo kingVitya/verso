@@ -9,6 +9,8 @@ export default function PracticeView({
   onBack, 
   sliderStep = 5, 
   revealDuration = 5,
+  fontSize = 15,
+  setFontSize = () => {},
   onCompleteSession = () => {}
 }) {
   const [sliderValue, setSliderValue] = useState(0)
@@ -78,15 +80,44 @@ export default function PracticeView({
     <>
       <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in duration-300 pb-36 sm:pb-32">
 
-        {/* Top Bar: Back & Toggle */}
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <button
-            onClick={handleBack}
-            className="flex items-center gap-2 self-start md:self-auto text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors py-2 cursor-pointer"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Назад</span>
-          </button>
+        {/* Top Bar: Back, Font Size & Toggle */}
+        <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:items-center justify-between">
+          <div className="flex items-center justify-between w-full md:w-auto gap-3">
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors py-2 cursor-pointer"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium">Назад</span>
+            </button>
+
+            {/* Font size quick adjuster */}
+            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setFontSize(Math.max(12, fontSize - 1))}
+                disabled={fontSize <= 12}
+                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer active:scale-95"
+                title="Уменьшить шрифт"
+                aria-label="Уменьшить шрифт"
+              >
+                A-
+              </button>
+              <span className="text-[11px] font-mono font-semibold text-zinc-500 dark:text-zinc-400 px-1 min-w-[26px] text-center select-none">
+                {fontSize}
+              </span>
+              <button
+                type="button"
+                onClick={() => setFontSize(Math.min(24, fontSize + 1))}
+                disabled={fontSize >= 24}
+                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer active:scale-95"
+                title="Увеличить шрифт"
+                aria-label="Увеличить шрифт"
+              >
+                A+
+              </button>
+            </div>
+          </div>
 
           {/* Mode Toggle (Segmented Control) */}
           <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800/80 rounded-xl w-full md:w-auto">
@@ -152,12 +183,16 @@ export default function PracticeView({
         )}
 
         {/* Main Text Area */}
-        <div className="bg-white dark:bg-zinc-900 rounded-3xl p-5 md:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-sm min-h-[40vh] font-serif leading-relaxed">
+        <div 
+          className="bg-white dark:bg-zinc-900 rounded-3xl p-4 sm:p-6 md:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-sm min-h-[40vh] font-serif leading-relaxed overflow-x-auto overscroll-x-contain touch-pan-x"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           <MemorizeText
             text={displayedText}
             mode={mode}
             sliderValue={sliderValue}
             revealDuration={revealDuration}
+            fontSize={fontSize}
           />
         </div>
       </div>
